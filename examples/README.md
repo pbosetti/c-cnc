@@ -3,21 +3,50 @@
 ## Notes and caveats
 
 * Remember to save the file before compiling (CRTL-S)
+* Respect proper indentations (2 spaces, inserted by hiting the Tab key; increase indentation by one level for each nested block)
 
-## To create a static function
+## Libraries
+
+### How to create a _static_ library
 
 First, compile all the C source files containing functions that you want to include in your library:
 
+```sh
 gcc -c f1.c f2.c
+```
 
-This creates f1.o and f2.o (object files)
+This creates `f1.o` and `f2.o` (object files)
 
 Second, archive the object files into a single library file:
 
+```sh
 ar rcs mylib.a f1.o f2.o
+```
 
-Third, write a header file that contains the declarations of all the functions in the library (only the signature of each function), and #include that header in your main file.
+Third, write a header file that contains the declarations of all the functions in the library (only the signature of each function), and `#include` that header in your main file.
 
 Lastly, compile the main file by passing to the compiler also the library name:
 
+```sh
 gcc ex1.c mylib.a -o ex1
+```
+
+### How to create a _shared_ (or _dynamic_) library
+
+A shared library is a piece of software that remains in a different file w.r.t. the executable, so that many different executables can _share_ the same library. On the opposite, a static library is merged to the executable into a single file on compilation.
+
+To create the dynamic library with `f1.c` and `f2.c`:
+
+```sh
+gcc -shared -fPIC src/f1.c src/f2.c -o libmylib.so
+```
+
+This creates the library with the standard name of `libmylib.so` (`.so` stands for _shared object_).
+
+The executable can be _linked_ with the library during compilation:
+
+```sh
+gcc src/main.c -L. -lmylib -o main
+```
+
+where `-L.` instructs the compiler to search for shared libraries in the local folder (`.`), and `-lmylib` links to the `lib`*`mylib`*`.so` library file.
