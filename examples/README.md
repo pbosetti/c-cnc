@@ -41,12 +41,16 @@ To create the dynamic library with `f1.c` and `f2.c`:
 gcc -shared -fPIC src/f1.c src/f2.c -o libmylib.so
 ```
 
-This creates the library with the standard name of `libmylib.so` (`.so` stands for _shared object_).
+This creates the library with the standard name of `libmylib.so` (`.so` stands for _shared object_). The library must be copied into the system folder in order for the operating system to find it on launch of the executable:
+
+```sh
+sudo cp libmylib.so /usr/lib
+```
 
 The executable can be _linked_ with the library during compilation:
 
 ```sh
-gcc src/main.c -L. -lmylib -o main
+gcc src/ex1.c -L. -lmylib -o ex1d
 ```
 
 where `-L.` instructs the compiler to search for shared libraries in the local folder (`.`), and `-lmylib` links to the `lib`*`mylib`*`.so` library file.
