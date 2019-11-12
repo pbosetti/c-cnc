@@ -1,5 +1,32 @@
 # Things to remember for C Programming
 
+# Pointers
+
+Pointers are special variables that hold the address of a memory location rather than a value.
+
+Pointers are *declared* by prepending a `*` to their name:
+
+```c
+double *val;
+```
+
+To deal with pointers and memory addresses there are to operators: the *reference* operator `&` (which returns the address of a variable) and the *dereference* operator `*` (which returns the content of a pointer). 
+So you can assign the address of a variable to a pointer like this: 
+
+```c
+double *val_p;
+double val = 5.9;
+val_p = &val;
+```
+
+and you can get the value stored at the memory location pointed by a pointer like this:
+
+```c
+printf("Content of %p is %f\n", val_p, *val_p);
+```
+
+To help your memory, remember that the reference operator `&val` is pronunced as "address of `val`", the dereference operator `*val_p` is pronunced as "content of `val_p`".
+
 # Arrays
 
 ## Array declaration
