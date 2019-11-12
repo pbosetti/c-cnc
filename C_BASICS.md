@@ -58,9 +58,9 @@ Unlike native types (as `long int`) whose actual nit size depends on the archite
 
 ## Compound types
 
-A compound type is a structure: a collection of field of different types representing an object.
+A C *structure* is a compound type: a collection of fields of different types representing a complex object.
 
-A structure is *defined* with the keyword `struct`: the general declaration is `struct <name> { type field1; type field2; ...}`. For example:
+A structure is *defined* with the keyword `struct`: the general definition is `struct <name> { type field1; type field2; ...}`. For example:
 
 ```c
 struct my_struct {
@@ -104,4 +104,53 @@ typedef struct { // no structure name here!
 ...
 mystruct_t ms; // this is an instance of struct my_struct
 ```
-2
+
+## Quick initialization
+
+Arrays and structs can be declared and initialized in one step assigning a list of values in curly braces. The size of the list must be less or equal the number of elements in the array or struct:
+
+```c
+typedef struct {
+  double a, b; 
+  int c, 
+  char name[100];
+} mystruct_t;
+...
+double a[5] = {1, 2, 3, 4, 5};
+mystruct_t s1 = {1.0, 3.0, 20, "test"};
+mystruct_t s2 = {5.0, 2.0};
+```
+
+Note, though, that this direct assignment of multiple values in a list **only works on variable declaration**: you cannot directly assign a compound object after its declaration.
+Moreover, this direct assignment **does not work** if the compound type is declared as a pointer (e.g. `mystruct_t *s3`).   
+
+## Where to define custom types and structures
+
+Definition of custom types and structures can be made either at the top level or within a function. **New types are only visible within the local context**. This means that if you define a `struct` within a function, then you can only declare variables of that type within the same function. Conversey, if you define a custom type (including `struct`s) at the top level, that definition is available in every function.
+
+As a rule of thumb:
+
+* things that are of common usage have to be defined in header files (`.h`); in this way they end up being defined at the top level of *each source file* (`.c`) that includes that header.
+* things that are of local usage have to be defined in source files (`.c`): at the top level if they are used in more than one function, within a single function in any other case.
+
+## Naming schemes
+
+* Variable and function names shall be declared as: `my_variable`
+* Global variables (declared at the top level) shall be declared as: `MyGlobalVariable`
+* custom types (including `struct` types) shall be *defined* as: `mystruct_t` 
+
+# Array of structs
+
+In C it is possible to create array of every possible type, including structs:
+
+```c
+typedef struct {
+  double x, y;
+} point_t;
+...
+point_t *points = malloc(n * sizeof(point_t));
+for (i = 0; i < n; i++) {
+  points[i].x = ary_x[i];
+  points[i].y = ary_y[i];
+}
+```
