@@ -22,7 +22,7 @@ ary + 1; // memory location containing 2
 
 The first line is a **quick initialization**: see [later on](#quick-initialization) for further information on this.
 
-The last two lines are an example of **pointer arithmetics**: incrementng or decrementing a pointer allows to read memory contents at a given offset from the original pointer.
+The last two lines are an example of **pointer arithmetics**: incrementng or decrementing a pointer allows to read memory contents at a given offset from the original pointer. As a matter of fact, `ary[n]` and `ary + n` are exactly the same thing, just with different syntax.
 
 ## When to use stack or heap declared arrays
 
