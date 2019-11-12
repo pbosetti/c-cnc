@@ -4,7 +4,6 @@
 #include <stdint.h>
 
 
-
 float *dontwork(size_t n) {
   float a[n];
   size_t i;
