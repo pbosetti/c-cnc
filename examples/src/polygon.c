@@ -1,5 +1,6 @@
 #include "polygon.h"
 #include <string.h>
+#include <stdio.h>
 #include <math.h>
 
 size_t PolygonCount = 0;
@@ -49,12 +50,12 @@ void polygon_calc(polygon_t *poly) {
 
 void polygon_print(polygon_t *poly) {
   size_t i;
-  printf("Polygon #%d: %s\n", poly->id, poly->name);
+  printf("Polygon #%ld: %s\n", poly->id, poly->name);
   printf("Center: [%f, %f]\n", poly->center.x, poly->center.y);
   printf("Perimeter: %f\n", poly->perimeter);
   printf("Area: %f\n", poly->area);
   for (i = 0; i < poly->n_sides; i++) {
-    printf("  %d: [%f, %f]\n", i, poly->vertex[i].x, poly->vertex[i].y);
+    printf("  %ld: [%f, %f]\n", i, poly->vertex[i].x, poly->vertex[i].y);
   }
 }
 
