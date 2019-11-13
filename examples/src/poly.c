@@ -1,3 +1,7 @@
+// Lesson of Nov. 12th
+// This executable shows usage of code in polygon.c/.h 
+// to compile, from the folder examples:
+//   gcc src/polygon.c src/poly.c -o poly -lm -g
 #include <stdio.h>
 #include "polygon.h"
 

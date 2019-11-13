@@ -54,3 +54,13 @@ gcc src/ex1.c -L. -lmylib -o ex1d
 ```
 
 where `-L.` instructs the compiler to search for shared libraries in the local folder (`.`), and `-lmylib` links to the `lib`*`mylib`*`.so` library file.
+
+## How to debug an executable
+
+Visual Studio Code can be configured to debug your executable. To do so, you need to perform three steps:
+
+1. (re)compile your code with the `-g` switch, e.g.: `gcc src1.c src2.c src3.c -omyexec -lm -g`
+2. Setup the debugger: switch to the debugging environment (click on the bug icon on VSC toolbar on the left); click on the little gear button on the top left panel; in the file `launch.json` that opens, change the `"program"` field to point to your executable, as in `"${workspaceFolder}/examples/poly"`, where workspaceFolder represents the root folder that you opened in VSC; save and close `launch.json`
+3. Set at least one breakpoint in your code: move the mouse pointer slightly to the left of a line number until you see a dark red circle, and click it.
+
+Now you can run the program in the debugging environment, inspecting the content of variables and moving one line at a time by clicking on the buttongs *step over* (skips calls to functions), *step into* (follows calls to functions), and *step out* (completes the current function and returns to the caller one).

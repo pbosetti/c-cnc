@@ -1,9 +1,12 @@
+// Lesson of Nov. 11th
 #include <stdio.h>
 // malloc() is made available by stdlib.h
 #include <stdlib.h>
 #include <stdint.h>
 
-
+// return an array on the stack
+// does not work, because that memory is deleted on returning
+// note that gcc compiler raises a warning on this
 float *dontwork(size_t n) {
   float a[n];
   size_t i;
@@ -13,6 +16,8 @@ float *dontwork(size_t n) {
   return a;
 }
 
+// Only fills the array memory passed as an inout parameter
+// the array itself needs to be allocated outside (i.e. in the caller)
 void inout(size_t n, float *a) {
   size_t i;
   for (i = 0; i < n; i++) {
