@@ -26,7 +26,7 @@ void poly_add(poly_t *poly, segment_t *seg) {
   /* to be completed */
 }
 
-void poly_insert_at(polt_t *poly, segment_t *seg, size_t pos) {
+void poly_insert_at(poly_t *poly, segment_t *seg, size_t pos) {
   /* to be completed */
 }
 
@@ -56,8 +56,8 @@ int main(int argc, char const *argv[]) {
   // Backward
   /* to be completed: loop and print vertex positions and index from last to first
     format must be:
-    10: {1, 6}
-     9: {3, 2}
+    10: {1, 7}
+     9: {5, 5}
     etc
   */
 
