@@ -5,4 +5,6 @@ This is the repository of the code developed during the Manufacturing Automation
 ## Contents
 
 * `examples`: contains introductory code examples
-* `src`: contains the main project source code
+* `src`: contains the main project source code (library files)
+*  `src/main`: contains executables code
+
