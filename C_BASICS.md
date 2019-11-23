@@ -36,8 +36,8 @@ An array can be declared in the stack memory or on the heap memory.
 * *on the stack*: the array or `n` elements is declared as: `double ary[n];`
 * *on the heap*: the array is declared as: `double *ary;` then it must be assigned to a memory block allocated with proper size via a call to `malloc()`
 
-In any case (stack or heap) in C an array is a pointer to its first element, so in both cases, `ary` points to the memory location containing the first value of the array. The square brackets operator is actualli asking for the content of a memory location with a given offset respect to the first element. So:
-
+In any case (stack or heap) in C an array is a pointer to its first element, so in both cases, `ary` points to the memory location containing the first value of the array. The square brackets operator is actually asking for the content of a memory location with a given offset respect to the first element. So:
+`
 ```c
 double ary[3] = {1, 2, 3};
 ary; // memory location containing 1
