@@ -2,8 +2,11 @@
 #include <lua.h>
 #include <lualib.h>
 
-#include <ccnc.h>
 #include "machine.h"
+
+// Data types
+typedef double data_t;    // for REAL data
+typedef uint32_t index_t; // for indexes
 
 struct axis *axis_new() {
   struct axis *a = (struct axis *)malloc(sizeof(struct axis));

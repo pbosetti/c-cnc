@@ -4,3 +4,4 @@
 !/examples/*.md
 !/examples/src
 .vscode
+/build
