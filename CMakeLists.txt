@@ -24,18 +24,18 @@ include_directories(
 #     first argument is the name of the target
 #     second argument is the type of the library (STATIC of SHARED)
 #     third argument is a list of source files
-# add_library(ccnclib STATIC ${LIB_SOURCES})
-# target_link_libraries(ccnclib m)
+add_library(ccnclib STATIC ${LIB_SOURCES})
+target_link_libraries(ccnclib m)
 
 add_executable(test ${SOURCE_DIR}/main/test.c)
-target_link_libraries(test machine)
+target_link_libraries(test ccnclib machine)
 
 # INSTALL
 # First, set the base install folder: everything will be installed below this:
 set(CMAKE_INSTALL_PREFIX ${CMAKE_HOME_DIRECTORY})
 # Then define subfolders under CMAKE_INSTALL_PREFIX where to put executables
 #      and libraries
-install(TARGETS test
+install(TARGETS test ccnclib
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib

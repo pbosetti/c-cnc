@@ -3,12 +3,13 @@
 point_t point_new() {
   point_t p = {0, 0, 0};
   p.s = 0;
+  return p;
 }
 
-#define X_SET '\1'
-#define Y_SET '\2'
-#define Z_SET '\4'
-#define ALL_SET '\7'
+#define X_SET '\1'   // binaty: 0000 0001
+#define Y_SET '\2'   // binary: 0000 0010
+#define Z_SET '\4'   // binary: 0000 0100
+#define ALL_SET '\7' // binary: 0000 0111
 
 // BITMASK
 // p.s: xxxx xxxx
@@ -20,16 +21,31 @@ void point_x(point_t *p, data_t v) {
   p->s = p->s | X_SET;
 }
 
+// BITMASK
+// p.s: xxxx xxxx
+//   1: 0000 0010
+// --------------
+// OR:  xxxx xx1x
 void point_y(point_t *p, data_t v) {
   p->y = v;
   p->s |= Y_SET;
 }
 
+// BITMASK
+// p.s: xxxx xxxx
+//   1: 0000 0100
+// --------------
+// OR:  xxxx x1xx
 void point_z(point_t *p, data_t v) {
   p->z = v;
   p->s |= Z_SET;
 }
 
+// BITMASK
+// p.s: xxxx xxxx
+//   1: 0000 0111
+// --------------
+// OR:  xxxx x111
 void point_xyz(point_t *p, data_t x, data_t y, data_t z) {
   p->x = x;
   p->y = y;
@@ -61,13 +77,13 @@ void point_modal(point_t *p1, point_t *p2) {
     point_y(p2, p1->y);
   }
   if ( !(p2->s & Z_SET) && (p1->s & Z_SET)) {
-    point_Z(p2, p1->z);
+    point_z(p2, p1->z);
   }
 }
 
 
 // provide a description of the point
-// description as [1.000 - 2.345]
+// description as [  01.234        -   23.456]
 void point_inspect(point_t *p, char **desc) {
   if (p == NULL) { // [       -        -        -]
     asprintf(desc, "[%8s %8s %8s]", "-", "-", "-");

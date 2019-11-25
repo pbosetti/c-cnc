@@ -1,3 +1,9 @@
+//    ____       ____ _   _  ____ 
+//   / ___|     / ___| \ | |/ ___|
+//  | |   _____| |   |  \| | |    
+//  | |__|_____| |___| |\  | |___ 
+//   \____|     \____|_| \_|\____|
+//
 // Point object in 3D coordinates
 
 #ifndef POINT_H
@@ -5,19 +11,21 @@
 
 #include "ccnc.h"
 
-
+// The point object: three coordinates and a bitmask:
+// the bitmask s holds three bits indicating which 
+// field has been set or not
 typedef struct {
   data_t x, y, z;
   uint8_t s;
 } point_t;
 
 
-// functions declarations
+// Functions declarations
 
 // create a new point
 point_t point_new();
 
-// set point coordinates
+// set point coordinates and update bitmask
 void point_x(point_t *p, data_t v);
 void point_y(point_t *p, data_t v);
 void point_z(point_t *p, data_t v);
@@ -29,7 +37,7 @@ data_t point_dist(point_t *p1, point_t *p2);
 // calculates the three projections of a segment
 void point_delta(point_t *p1, point_t *p2, point_t *delta);
 
-// modal behavior: import undefined values in p2 from p1
+// modal behavior: copy missing values in p2 from p1
 void point_modal(point_t *p1, point_t *p2);
 
 // provide a description of the point

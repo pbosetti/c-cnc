@@ -1,5 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include "../ccnc.h"
 
 
 int main(int argc, char const *argv[]) {
