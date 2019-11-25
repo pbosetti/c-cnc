@@ -1,5 +1,6 @@
 # BASIC PROJECT SETTINGS
 cmake_minimum_required(VERSION 3.5)
+project(c-cnc C)
 set(CMAKE_BUILD_TYPE "Debug")
 
 # This creates a new "machine" library
@@ -23,18 +24,18 @@ include_directories(
 #     first argument is the name of the target
 #     second argument is the type of the library (STATIC of SHARED)
 #     third argument is a list of source files
-add_library(ccnclib STATIC ${LIB_SOURCES})
-target_link_libraries(ccnclib m)
+# add_library(ccnclib STATIC ${LIB_SOURCES})
+# target_link_libraries(ccnclib m)
 
 add_executable(test ${SOURCE_DIR}/main/test.c)
-target_link_libraries(test ccnclib machine)
+target_link_libraries(test machine)
 
 # INSTALL
 # First, set the base install folder: everything will be installed below this:
 set(CMAKE_INSTALL_PREFIX ${CMAKE_HOME_DIRECTORY})
 # Then define subfolders under CMAKE_INSTALL_PREFIX where to put executables
 #      and libraries
-install(TARGETS ccnclib test
+install(TARGETS test
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
