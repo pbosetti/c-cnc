@@ -90,17 +90,17 @@ void point_inspect(point_t *p, char **desc) {
   } else {
     char str_x[9], str_y[9], str_z[9];
     if (p->s & X_SET) {
-      sprintf(str_x, "%8.3f", p->x);
+      snprintf(str_x, 9, "%8.3f", p->x);
     } else { // X is undefined 
       sprintf(str_x, "%8s", "-");
     }
     if (p->s & Y_SET) {
-      sprintf(str_y, "%8.3f", p->y);
+      snprintf(str_y, 9, "%8.3f", p->y);
     } else { // Y is undefined 
       sprintf(str_y, "%8s", "-");
     }
     if (p->s & Z_SET) {
-      sprintf(str_z, "%8.3f", p->z);
+      snprintf(str_z, 9, "%8.3f", p->z);
     } else { // Z is undefined 
       sprintf(str_z, "%8s", "-");
     }
