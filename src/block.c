@@ -40,7 +40,7 @@ index_t block_parse(block_t *block) {
   assert(line != NULL);
 
   while ((word = strsep(&line, " ")) != NULL) {
-    block_set_field(block, word[0], word + 1)
+    block_set_field(block, word[0], word + 1);
     i++;
   }
   free(tofree);
