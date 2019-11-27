@@ -3,24 +3,27 @@
 //  | |   _____| |   |  \| | |    
 //  | |__|_____| |___| |\  | |___ 
 //   \____|     \____|_| \_|\____|
-//
 // Point object in 3D coordinates
-
 #ifndef POINT_H
 #define POINT_H
 
+// include master header
 #include "ccnc.h"
+
+// DATA STRUCTURES
+// ===============
 
 // The point object: three coordinates and a bitmask:
 // the bitmask s holds three bits indicating which 
 // field has been set or not
 typedef struct {
-  data_t x, y, z;
-  uint8_t s;
+  data_t x, y, z; // coordinates
+  uint8_t s;      // set/unset bitmask
 } point_t;
 
 
-// Functions declarations
+// FUNCTIONS
+// =========
 
 // create a new point
 point_t point_new();
@@ -49,13 +52,6 @@ void point_modal(point_t *p1, point_t *p2);
 // ...
 // free(desc);
 void point_inspect(point_t *p, char **desc);
-
-
-
-
-
-
-
 
 #endif
 
