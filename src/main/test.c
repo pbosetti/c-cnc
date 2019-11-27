@@ -1,5 +1,5 @@
 #include "../ccnc.h"
-
+#include "../point.h"
 
 int main(int argc, char const *argv[]) {
   point_t p1, p2, p3, delta;

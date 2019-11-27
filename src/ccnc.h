@@ -28,11 +28,5 @@ typedef double data_t;
 typedef uint32_t index_t;
 
 
-// library headers: to use the library, just include this header
-#include "point.h"
-#include "block.h"
-#include "program.h"
-
-
 // end of double inclusion guard
 #endif

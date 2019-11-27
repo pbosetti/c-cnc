@@ -9,6 +9,7 @@
 
 // include master header
 #include "ccnc.h"
+#include "point.h"
 
 // DATA STRUCTURES
 // ===============
