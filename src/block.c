@@ -1,5 +1,5 @@
+#include <ctype.h>
 #include "block.h"
-
 
 // static functions are not declared in the header and are 
 // only visible from within this file
@@ -151,7 +151,7 @@ int block_parse(block_t *block) {
   assert(line != NULL);
 
   while ((word = strsep(&line, " ")) != NULL) {
-    if (block_set_field(block, word[0], word + 1) == EXIT_FAILURE) {
+    if (block_set_field(block, toupper(word[0]), word + 1) == EXIT_FAILURE) {
       return EXIT_FAILURE;
     }
   }
@@ -205,7 +205,7 @@ void block_print(block_t *b, FILE *out) {
   point_inspect(&b->target, &t);
   point_inspect(&p0, &p);
 
-  fprintf(out, "%3d: %s -> %s F7.1%f S7.1%f T%2d (%d)", b->n, p, t, b->feedrate, b->spindle, b->tool, b->type);
+  fprintf(out, "%03d: %s -> %s F%7.1f S%7.1f T%2d (%d)\n", b->n, p, t, b->feedrate, b->spindle, b->tool, b->type);
 
   // remember to free allocated memory!!!
   free(t);

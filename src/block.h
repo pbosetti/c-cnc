@@ -44,8 +44,8 @@ typedef struct block {
   data_t length;           // block length
   point_t delta;           // delta coordinates
   block_profile_t *prof;   // velocity profile data
-  block_t *prev;           // next block (for linked list)
-  block_t *next;           // previous block
+  struct block *prev;           // next block (for linked list)
+  struct block *next;           // previous block
   struct machine_config *config;
 } block_t;
 
