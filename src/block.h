@@ -10,6 +10,7 @@
 // include master header
 #include "ccnc.h"
 #include "point.h"
+#include <machine.h>
 
 // DATA STRUCTURES
 // ===============
@@ -34,7 +35,7 @@ typedef struct {
 // a block is a line of G-code
 typedef struct block {
   char *line;              // G-code line as a string
-  block_type_t block_type; // type of block
+  block_type_t type;       // type of block
   index_t n;               // progressive number of block
   index_t tool;            // current tool
   data_t spindle;          // spindle speed
@@ -43,8 +44,9 @@ typedef struct block {
   data_t length;           // block length
   point_t delta;           // delta coordinates
   block_profile_t *prof;   // velocity profile data
-  struct block *prev;      // next block (for linked list)
-  struct block *next;      // previous block
+  block_t *prev;           // next block (for linked list)
+  block_t *next;           // previous block
+  struct machine_config *config;
 } block_t;
 
 // FUNCTIONS
@@ -58,7 +60,8 @@ block_t *block_new(char *line, block_t *prev);
 void block_free(block_t *block);
 
 // parse the lien field and update data from the G-code commands
-index_t block_parse(block_t *block);
+// return EXIT_SUCCESS on success
+int block_parse(block_t *block);
 
 // evaluate the lambda function after t seconds from the beginning
 data_t block_lambda(block_t *block, data_t time);
