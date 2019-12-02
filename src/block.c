@@ -27,8 +27,9 @@ block_t *block_new(char *line, block_t *prev) {
   b->delta = point_new();
   // allocate memory for referenced valus
   b->prof = malloc(sizeof(block_profile_t));
+  assert(b->prof != NULL);
   // copy line into b->line
-  asprintf(b->line, "%s", line);
+  asprintf(&(b->line), "%s", line);
   return b;
 }
 
