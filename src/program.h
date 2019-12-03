@@ -23,6 +23,13 @@ typedef struct {
   index_t n;       // total number of blocks in file
 } program_t;
 
+typedef enum {
+  STOP = 0,
+  CONTINUE
+} block_ctrl_t;
+
+typedef block_ctrl_t (*timeloop_t)(block_t *b, data_t time, void *userdata);
+typedef void (*blockloop_t)(block_t *b, void *userdata);
 
 // FUNCTIONS
 // =========
@@ -41,7 +48,12 @@ int program_parse(program_t *program, struct machine_config *cfg);
 void program_print(program_t *program, FILE *out);
 
 // loop over the whole program
-void program_loop(program_t *program);
+// timestep is a callback function to be exec. at each timestep (NOT NULL!)
+// new_block is a callback to be exec at every block, can be NULL
+// userdata is passed to timestep and new_block
+void program_loop(program_t *program,
+        timeloop_t timestep,
+        blockloop_t new_block, void *userdata);
 
 
 

@@ -69,6 +69,24 @@ void program_print(program_t *p, FILE *out) {
 }
 
 // loop over the whole program
-void program_loop(program_t *program) {
+void program_loop(program_t *program,
+        timeloop_t timestep,
+        blockloop_t new_block,
+        void *userdata) {
+  assert(program != NULL);
+  assert(timestep != NULL);
+  data_t t;
+  block_t *b = program->first;
 
+  do { // loop on G-code blocks
+    if (new_block != NULL) {
+      new_block(b, userdata);
+    }
+    for (t = 0.0; t < b->prof->dt; t += b->config->tq) {
+      if(timestep(b, t, userdata) == STOP) {
+        break;
+      }
+    }
+    b = b->next;
+  } while (b);
 }
