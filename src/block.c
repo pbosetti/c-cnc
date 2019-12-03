@@ -68,7 +68,7 @@ static void block_compute(block_t *b) {
 
   A = b->config->A;
   D = b->config->D;
-  f_m = b->feedrate * 60.0;
+  f_m = b->feedrate / 60.0;
   l = b->length;
 
   dt_1 = f_m / A;

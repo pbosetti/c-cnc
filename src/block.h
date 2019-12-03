@@ -34,19 +34,19 @@ typedef struct {
 
 // a block is a line of G-code
 typedef struct block {
-  char *line;              // G-code line as a string
-  block_type_t type;       // type of block
-  index_t n;               // progressive number of block
-  index_t tool;            // current tool
-  data_t spindle;          // spindle speed
-  data_t feedrate;         // tool feedrate
-  point_t target;          // target position at the end of block
-  data_t length;           // block length
-  point_t delta;           // delta coordinates
-  block_profile_t *prof;   // velocity profile data
-  struct block *prev;           // next block (for linked list)
-  struct block *next;           // previous block
-  struct machine_config *config;
+  char *line;                    // G-code line as a string
+  block_type_t type;             // type of block
+  index_t n;                     // progressive number of block
+  index_t tool;                  // current tool
+  data_t spindle;                // spindle speed
+  data_t feedrate;               // tool feedrate
+  point_t target;                // target position at the end of block
+  data_t length;                 // block length
+  point_t delta;                 // delta coordinates
+  block_profile_t *prof;         // velocity profile data
+  struct block *prev;            // next block (for linked list)
+  struct block *next;            // previous block
+  struct machine_config *config; // machine properties
 } block_t;
 
 // FUNCTIONS
