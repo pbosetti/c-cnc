@@ -44,13 +44,4 @@ void program_print(program_t *program, FILE *out);
 void program_loop(program_t *program);
 
 
-
-
-
-
-
-
-
 #endif
-
-
