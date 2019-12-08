@@ -61,8 +61,71 @@ void list_insert(list_t *list, char *name, char *after) {
       e->next = new;
       break;
     }
-  } while (e = e->next);
+  } while ((e = e->next));
 }
+
+typedef enum {FIRST = 0, LAST} loop_order_t;
+typedef int (*loop_fun)(element_t *e, void *userdata);
+void list_loop(list_t *list, loop_fun f, loop_order_t order, void *userdata) {
+  element_t *e;
+  if (order == FIRST)
+    e = list->first;
+  else
+    e = list->last;
+
+  do {
+    if (f(e, userdata) == 0) break;
+    if (order == FIRST) e = e->next;
+    else e = e->prev;
+  } while (e);
+}
+
+
+
+//    _____      _ _ ____             _        
+//   / ____|    | | |  _ \           | |       
+//  | |     __ _| | | |_) | __ _  ___| | _____ 
+//  | |    / _` | | |  _ < / _` |/ __| |/ / __|
+//  | |___| (_| | | | |_) | (_| | (__|   <\__ \
+//   \_____\__,_|_|_|____/ \__,_|\___|_|\_\___/
+
+// print all elements
+int print_all(element_t *e, void *userdata) {
+  printf("%8s, %15p -> %15p -> %15p\n", e->name, e->prev, e, e->next);
+  return 1;
+}
+
+// Print a range of elements, from start to start+span
+struct range {size_t start, span;};
+
+int print_range(element_t *e, void *userdata) {
+  // static variables retain their values between calls
+  // and must be inizialized. The initial value is the 
+  // value that the static variable has the very first time
+  // this function is executed
+  static size_t i = 0;
+
+  // the userdata must be casted to the expected type
+  // before being used
+  struct range *rng = (struct range *)userdata;
+
+  // reset i and return 0 if we past the end of range
+  // or if we reached the end of the list
+  if (e == NULL || i >= rng->start + rng->span) {
+    i = 0;
+    return 0;
+  } 
+
+  // Only print if we past the start of range
+  if (i >= rng->start) {
+    printf("%8s, %15p -> %15p -> %15p\n", e->name, e->prev, e, e->next);
+  }
+
+  // increment the counter
+  i++;
+  return 1;
+}
+
 
 
 int main(int argc, char const *argv[]) {
@@ -81,19 +144,19 @@ int main(int argc, char const *argv[]) {
   }
 
   // print the content of the list in reverse order
-  e = list->last; // set the starting point
-  do {
-    printf("%8s, %15p -> %15p -> %15p\n", e->name, e->prev, e, e->next);
-  } while (e = e->prev); // move back at every iteration
+  list_loop(list, print_all, LAST, NULL);
+  printf("\n");
 
   // insert a new element with name "two.five" after "two"
   list_insert(list, "two.five", "two");
-
   // print the new content in normal order
-  e = list->first; // set the starting point
-  do {
-    printf("%8s, %15p -> %15p -> %15p\n", e->name, e->prev, e, e->next);
-  } while (e = e->next); // move forward at every iteration
+  list_loop(list, print_all, FIRST, NULL);
+  printf("\n");
+
+  // Only print a slice of the array, from element 1
+  // to element 1+2
+  struct range rng = {1, 2};
+  list_loop(list, print_range, FIRST, &rng);
 
   return 0;
 }
