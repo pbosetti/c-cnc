@@ -70,7 +70,6 @@ static void block_compute(block_t *b) {
   D = b->config->D;
   f_m = b->feedrate / 60.0;
   l = b->length;
-
   dt_1 = f_m / A;
   dt_2 = f_m / D;
   dt_m = l / f_m - (dt_1 + dt_2) / 2.0;
@@ -178,8 +177,8 @@ data_t block_lambda(block_t *b, data_t t) {
     r = f * (dt_1 / 2.0 + (t - dt_1));
   } else if (t < (dt_1 + dt_m + dt_2)) {
     data_t t_2 = dt_1 + dt_m;
-    r = f * (dt_1 / 2.0 + f * (dt_m + t - t_2) + 
-      d / 2.0 * pow(t, 2) + pow(t_2, 2) - d * t * t_2);
+    r = f * dt_1 / 2.0 + f * (dt_m + t - t_2) +
+        d / 2.0 * (pow(t, 2) + pow(t_2, 2)) - d * t * t_2;
   } else {
     r = b->prof->l;
   }
