@@ -4,6 +4,7 @@
 !/examples/*.md
 !/examples/src
 .vscode
-/build
-/bin
-/lib
+build
+/bin/*
+!/bin/*.lua
+/lib/*
