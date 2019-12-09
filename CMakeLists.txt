@@ -33,12 +33,15 @@ target_link_libraries(test_1 ccnclib machine)
 add_executable(ccnc ${SOURCE_DIR}/main/ccnc.c)
 target_link_libraries(ccnc ccnclib machine)
 
+add_executable(commissioning ${SOURCE_DIR}/main/commissioning.c)
+target_link_libraries(commissioning machine)
+
 # INSTALL
 # First, set the base install folder: everything will be installed below this:
 set(CMAKE_INSTALL_PREFIX ${CMAKE_HOME_DIRECTORY})
 # Then define subfolders under CMAKE_INSTALL_PREFIX where to put executables
 #      and libraries
-install(TARGETS test_1 ccnc ccnclib
+install(TARGETS test_1 ccnc ccnclib commissioning
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
