@@ -115,6 +115,7 @@ block_t *block_new(char *line, block_t *prev) {
     b->prev = prev;
     prev->next = b;
   } else { // this is the first block
+    memset(b, 0, sizeof(block_t)); // set all the contents of block to 0
     b->prev = NULL;
   }
 
@@ -126,7 +127,8 @@ block_t *block_new(char *line, block_t *prev) {
   b->prof = malloc(sizeof(block_profile_t));
   assert(b->prof != NULL);
   // copy line into b->line
-  asprintf(&(b->line), "%s", line);
+  b->line = malloc(strlen(line) + 1);
+  strncpy(b->line, line, strlen(line));
   return b;
 }
 

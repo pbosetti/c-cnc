@@ -12,6 +12,7 @@ include(Components.cmake)
 #                 and are read this way: ${VARIABLE_NAME}
 # Source path:
 set(SOURCE_DIR ${CMAKE_HOME_DIRECTORY}/src)
+set(CMAKE_C_FLAGS "-Wno-backslash-newline-escape")
 # List of all files in src with name ending in '.c':
 file(GLOB LIB_SOURCES ${SOURCE_DIR}/*.c)
 
