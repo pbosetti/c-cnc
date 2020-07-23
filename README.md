@@ -20,3 +20,11 @@ Building a project with Cmake is a two-step process. The first step is called *c
 **Note**: the `cmake` command must be run the first time, and then every time that you create, move, or rename source files. Conversely, if you only change contents of source files, then you only need to `make`. The `make` command is smart enough not to recompile files that have been already compiled and that are unchanged from the previous build: this reduces a lot the compilation time for large projects.
 
 **Note**: the command `make install` also does the compilation, so if you want the products in the install folder just call `make install` (i.e. there is no need for calling `make` and then `make install`)
+
+## Prerequisites
+
+If you want to use your own custom linux (Ubuntu or Debian), be sure to have the following packages:
+
+```sh
+sudo apt install build-essential cmake clang lldb lua5.3 libglu1-mesa-dev freeglut3-dev mesa-common-dev
+```
