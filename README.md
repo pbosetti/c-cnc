@@ -26,5 +26,5 @@ Building a project with Cmake is a two-step process. The first step is called *c
 If you want to use your own custom linux (Ubuntu or Debian), be sure to have the following packages:
 
 ```sh
-sudo apt install build-essential cmake clang lldb lua5.3 libglu1-mesa-dev freeglut3-dev mesa-common-dev
+sudo apt install build-essential cmake clang lldb lua5.3 libglu1-mesa-dev freeglut3-dev mesa-common-dev libreadline-dev
 ```
