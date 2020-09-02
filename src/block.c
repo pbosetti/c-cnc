@@ -94,7 +94,7 @@ static void block_compute(block_t *b) {
   b->prof->a = a;
   b->prof->d = d;
   b->prof->f = f_m;
-  b->prof->dt = dt;
+  b->prof->dt = b->type == RAPID ? 600 : dt;
   b->prof->l = l;
 }
 
@@ -206,6 +206,7 @@ void block_print(block_t *b, FILE *out) {
   point_inspect(&b->target, &t);
   point_inspect(&p0, &p);
 
+  fprintf(out, "%03d: %s", b->n, b->line);
   fprintf(out, "%03d: %s -> %s F%7.1f S%7.1f T%2d (%d)\n", b->n, p, t, b->feedrate, b->spindle, b->tool, b->type);
 
   // remember to free allocated memory!!!

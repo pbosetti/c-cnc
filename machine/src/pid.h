@@ -23,7 +23,8 @@ struct pid {
 
 struct pid *pid_init(data_t kp, data_t ki, data_t kd);
 void pid_free(struct pid *pid);
-void pid_reset(struct pid *pid, data_t kp, data_t ki, data_t kd);
+void pid_setup(struct pid *pid, data_t kp, data_t ki, data_t kd);
+void pid_reset(struct pid *pid);
 data_t pid_error(struct pid *pid);
 data_t pid_output(struct pid *pid, data_t dt);
 

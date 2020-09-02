@@ -331,7 +331,7 @@ motion(int x, int y)
     }
     // DRAG AXES
     else if (g_viewer.drag_axis != drag_none) {
-      g_command->coord[g_viewer.drag_axis] += g_viewer.xLastIncr;
+      g_status->coord[g_viewer.drag_axis] += g_viewer.xLastIncr;
     }
     // TRACKBALL
     else {
@@ -486,9 +486,9 @@ keyboard(unsigned char key, int x, int y)
         g_viewer.drag_axis = (drag_axis_t)(drag_axis_t(g_viewer.drag_axis) + 1);
         if (g_viewer.drag_axis > drag_none)
           g_viewer.drag_axis = drag_x;
+          move = true;
         break;
       case ' ':
-        memcpy(g_command, g_status, sizeof(command_t));
         g_command->run = !g_command->run;
         break;
       case 27:        // When Escape Is Pressed...
@@ -502,6 +502,9 @@ keyboard(unsigned char key, int x, int y)
   if (move) {
     g_points.push_back(g_coord);
   }
+  if (move)
+    memcpy(g_command, g_status, sizeof(command_t));
+  // printf("coords: %f %f %f\n", g_status->coord[0], g_status->coord[1], g_status->coord[2]);
   glutPostRedisplay();
 }
 

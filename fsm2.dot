@@ -1,0 +1,12 @@
+digraph "CCNC" {
+    init [label="do_init"]
+    idle
+    run
+    stop
+
+    init -> idle [label="setup"]
+    idle -> idle
+    idle -> run
+    run -> idle [label="setup"]
+    idle -> stop [label="#"]
+}

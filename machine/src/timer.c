@@ -54,7 +54,7 @@ uint64_t now_ns() {
 
 uint64_t wait_next(uint64_t interval) {
   static uint64_t last_call = 0;
-  if (last_call == 0) last_call = now_ns();
+  if (last_call == 0 || interval == 0) last_call = now_ns();
   uint64_t delta, delay;
   while ((delta = now_ns() - last_call)) {
     if (delta >= interval) {

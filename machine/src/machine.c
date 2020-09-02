@@ -14,7 +14,8 @@ struct axis *axis_new() {
   struct pid *pid = (struct pid *)malloc(sizeof(struct pid));
   assert(pid != NULL);
   a->pid = pid;
-  axis_set_state(a, 0, 0);
+  axis_set_state(a, 0);
+  axis_set_position(a, 0);
   return a;
 }
 
@@ -37,9 +38,13 @@ void axis_forward(struct axis *a, data_t dt) {
          1000;
 }
 
-void axis_set_state(struct axis *a, data_t x, data_t v) {
-  a->x = x;
+void axis_set_state(struct axis *a, data_t v) {
   a->v = v;
+  pid_reset(a->pid);
+}
+
+void axis_set_position(struct axis *a, data_t x) {
+  a->x = x;
 }
 
 void axis_do_step(struct axis *a, data_t dt) {
@@ -193,21 +198,25 @@ void machine_free(struct machine *m) {
 
 void machine_reset(struct machine *m) {
   assert(m != NULL);
-  axis_set_state(m->x, 0.0, 0.0);
-  axis_set_state(m->y, 0.0, 0.0);
-  axis_set_state(m->z, 0.0, 0.0);
+  axis_set_state(m->x, 0.0);
+  axis_set_state(m->y, 0.0);
+  axis_set_state(m->z, 0.0);
 }
 
 void machine_set_position(struct machine *m, data_t x, data_t y, data_t z) {
   assert(m != NULL);
-  axis_set_state(m->x, x, 0.0);
-  axis_set_state(m->y, y, 0.0);
-  axis_set_state(m->z, z, 0.0);
+  axis_set_position(m->x, x);
+  axis_set_position(m->y, y);
+  axis_set_position(m->z, z);
+  axis_set_state(m->x, 0.0);
+  axis_set_state(m->y, 0.0);
+  axis_set_state(m->z, 0.0);
   viewer_set_positions(m->viewer, m->x->x, m->y->x, m->z->x);
 }
 
 void machine_set_position_from_viewer(struct machine *m) {
   machine_set_position(m, m->viewer->coord[0], m->viewer->coord[1], m->viewer->coord[2]);
+  fprintf(stderr, "Set to %f %f %f\n", m->viewer->coord[0], m->viewer->coord[1], m->viewer->coord[2]);
 }
 
 void machine_go_to(struct machine *m, data_t x, data_t y, data_t z) {
@@ -226,8 +235,8 @@ void machine_do_step(struct machine *m, data_t t) {
 }
 
 data_t machine_error(struct machine *m) {
-  data_t ex = axis_error(m->x);
   assert(m != NULL);
+  data_t ex = axis_error(m->x);
   data_t ey = axis_error(m->y);
   data_t ez = axis_error(m->z);
   return sqrt(pow(ex, 2.0) + pow(ey, 2.0) + pow(ez, 2.0));

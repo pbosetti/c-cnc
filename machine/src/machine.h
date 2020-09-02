@@ -31,7 +31,8 @@ struct axis *axis_new();
 void axis_free(struct axis *a);
 void axis_go_to(struct axis *a, data_t x);
 void axis_forward(struct axis *a, data_t t);
-void axis_set_state(struct axis *a, data_t x, data_t v);
+void axis_set_state(struct axis *a, data_t v);
+void axis_set_position(struct axis *a, data_t x);
 void axis_do_step(struct axis *a, data_t t);
 data_t axis_error(struct axis *a);
 
@@ -91,7 +92,7 @@ void machine_enable_viewer(struct machine *m, char const path[]);
 // Release resources
 void machine_free(struct machine *m);
 
-// Reset the machine: set machine position to its zero, with zero speed
+// Reset the machine: set machine position to zero speed
 void machine_reset(struct machine *m);
 
 // Set the machine set point for the three axes

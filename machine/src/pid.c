@@ -12,7 +12,7 @@
 
 struct pid *pid_init(data_t kp, data_t ki, data_t kd) {
   struct pid *pid = malloc(sizeof(struct pid));
-  pid_reset(pid, kp, ki, kd);
+  pid_setup(pid, kp, ki, kd);
   return pid;
 }
 
@@ -20,16 +20,26 @@ void pid_free(struct pid *pid) {
   free(pid);
 }
 
-void pid_reset(struct pid *pid, data_t kp, data_t ki, data_t kd) {
+void pid_setup(struct pid *pid, data_t kp, data_t ki, data_t kd) {
   pid->kp = kp;
   pid->ki = ki;
   pid->kd = kd;
-  pid->p = pid->i = pid->d = 0.0;
-  pid->set_point = pid->actual = 0.0;
-  pid->saturate = 0;
-  pid->saturation[0] = pid->saturation[1] = 0.0;
-  pid->prev_error = 0.0;
+  pid_reset(pid);
 }
+
+void pid_reset(struct pid *pid) {
+  pid->p = 0.0;
+  pid->i = 0.0;
+  pid->d = 0.0;
+  pid->set_point = 0.0;
+  pid->actual = 0.0;
+  pid->saturate = 0;
+  pid->saturation[0] = 0.0;
+  pid->saturation[1] = 0.0;
+  pid->prev_error = 0.0;
+  pid->output = 0.0;
+}
+
 
 data_t pid_error(struct pid *pid) { return pid->set_point - pid->actual; }
 

@@ -34,6 +34,9 @@ target_link_libraries(exam ccnclib machine)
 add_executable(ccnc ${SOURCE_DIR}/main/ccnc.c)
 target_link_libraries(ccnc ccnclib machine)
 
+add_executable(ccnc_fsm ${SOURCE_DIR}/main/ccnc_fsm.c)
+target_link_libraries(ccnc_fsm ccnclib machine)
+
 add_executable(commissioning ${SOURCE_DIR}/main/commissioning.c)
 target_link_libraries(commissioning machine)
 
@@ -42,7 +45,7 @@ target_link_libraries(commissioning machine)
 set(CMAKE_INSTALL_PREFIX ${CMAKE_HOME_DIRECTORY})
 # Then define subfolders under CMAKE_INSTALL_PREFIX where to put executables
 #      and libraries
-install(TARGETS exam ccnc ccnclib commissioning
+install(TARGETS exam ccnc ccnc_fsm ccnclib commissioning
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib

@@ -13,6 +13,7 @@
 // block callback                                       
 void print_block_descr(block_t *b, void*userdata) {
   // print block descrption on stderr
+  fprintf(stderr, "\n");
   block_print(b, stderr);
   // print column header for data table on stdout at the
   // beginning of each g-code block
@@ -64,8 +65,8 @@ block_ctrl_t time_loop(block_t *b, data_t t, void *userdata) {
   // print out values
   fprintf(stdout, "%3d %1d %7.3f %7.3f %7.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f\n", b->n, b->type, cur_time, t, error, position->x, position->y, position->z, m->x->x, m->y->x, m->z->x);
 
-  // a RAPID block stops when the error becomes smaller than a ive threshold
-  if (b->type == RAPID && error <= m->cfg->error) {
+  // a RAPID block stops when the error becomes smaller than a given threshold
+  if ((b->type == RAPID) && (error <= m->cfg->error)) {
     return STOP;
   }
 
