@@ -1,5 +1,5 @@
 digraph "CCNC" {
-    init [label="do_init"]
+    init
     idle
     run
     stop
