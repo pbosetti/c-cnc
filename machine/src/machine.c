@@ -216,7 +216,6 @@ void machine_set_position(struct machine *m, data_t x, data_t y, data_t z) {
 
 void machine_set_position_from_viewer(struct machine *m) {
   machine_set_position(m, m->viewer->coord[0], m->viewer->coord[1], m->viewer->coord[2]);
-  fprintf(stderr, "Set to %f %f %f\n", m->viewer->coord[0], m->viewer->coord[1], m->viewer->coord[2]);
 }
 
 void machine_go_to(struct machine *m, data_t x, data_t y, data_t z) {
