@@ -163,25 +163,24 @@ state_t do_idle(state_data_t *sd) {
   char c;
 
   syslog(LOG_INFO, "[FSM] In state idle");
-  fprintf(stderr, "Do you want to:\n 1. run %s\n 2. quit\nType 1 or 2: ", sd->program_file);
+  fprintf(stderr, "Do you want to:\n 1. run %s\n 2. show status\n 3. quit\nType 1-3: ", sd->program_file);
   c = getchar();
   fflush(stdin); // drop further characters in stream
-  if (c == '1') {
+  switch (c) {
+  case '1':
     machine_set_position_from_viewer(sd->m);
     next_state = STATE_RUN;
-  }
-  else if (c == '2') {
-    next_state = STATE_STOP;
-  }
-  else if (c == '3') {
+    break;
+  case '2':
     machine_set_position_from_viewer(sd->m);
     fprintf(stderr, "Machine now at: %9.3f %9.3f %9.3f\n", sd->m->x->x, sd->m->y->x, sd->m->z->x);
     fprintf(stderr, "    velocities: %9.3f %9.3f %9.3f\n", sd->m->x->v, sd->m->y->v, sd->m->z->v);
     fprintf(stderr, "        viewer: %9.3f %9.3f %9.3f\n", sd->m->viewer->coord[0], sd->m->viewer->coord[1], sd->m->viewer->coord[2]);
+    break;
+  case '3':
+    next_state = STATE_STOP;
+    break;
   }
-  else {
-    next_state = NO_CHANGE;
-  } 
   
   switch (next_state) {
     case NO_CHANGE:
@@ -282,6 +281,7 @@ void idle_to_stop(state_data_t *data) {
 
 state_t run_state(state_t cur_state, state_data_t *data) {
   state_t new_state = state_table[cur_state](data);
+  if (new_state == NO_CHANGE) new_state = cur_state;
   transition_func_t *transition = transition_table[cur_state][new_state];
   if (transition)
     transition(data);
