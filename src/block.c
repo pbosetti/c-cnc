@@ -48,6 +48,8 @@ static int block_set_field(block_t *b, char cmd, char *arg) {
     case 'T':
       b->tool = atoi(arg);
       break;
+    case '\0': // empty line
+      break;
     default:
       fprintf(stderr, "ERROR: Unexpected G-code command %c%s\n", cmd, arg);
       return EXIT_FAILURE;
@@ -127,8 +129,9 @@ block_t *block_new(char *line, block_t *prev) {
   b->prof = malloc(sizeof(block_profile_t));
   assert(b->prof != NULL);
   // copy line into b->line
+  // asprintf(&b->line, "%s", line);
   b->line = malloc(strlen(line) + 1);
-  strncpy(b->line, line, strlen(line));
+  strcpy(b->line, line);
   return b;
 }
 
@@ -206,7 +209,6 @@ void block_print(block_t *b, FILE *out) {
   point_inspect(&b->target, &t);
   point_inspect(&p0, &p);
 
-  fprintf(out, "%03d: %s", b->n, b->line);
   fprintf(out, "%03d: %s -> %s F%7.1f S%7.1f T%2d (%d)\n", b->n, p, t, b->feedrate, b->spindle, b->tool, b->type);
 
   // remember to free allocated memory!!!

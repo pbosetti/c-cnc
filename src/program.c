@@ -33,8 +33,8 @@ void program_free(program_t *p) {
 int program_parse(program_t *p, struct machine_config *cfg) {
   assert(p != NULL);
   char *line = NULL;
-  ssize_t line_len;
-  size_t n;
+  ssize_t line_len = 0;
+  size_t n = 0;
   block_t *b;
 
   p->file = fopen(p->filename, "r");
@@ -45,6 +45,7 @@ int program_parse(program_t *p, struct machine_config *cfg) {
 
   p->n = 0;
   while ((line_len = getline(&line, &n, p->file)) > 0) {
+    line[line_len - 1] = '\0';  // remove trailing newline (\n)
     b = block_new(line, p->last);
     b->config = cfg;
     if (block_parse(b) == EXIT_FAILURE) {
