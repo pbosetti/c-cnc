@@ -1,6 +1,7 @@
 #include <lauxlib.h>
 #include <lua.h>
 #include <lualib.h>
+#include <string.h>
 
 #include "machine.h"
 
@@ -67,6 +68,7 @@ struct machine *machine_new(char *config_file) {
   m->x = axis_new();
   m->y = axis_new();
   m->z = axis_new();
+  memset(m->cfg->offset, 0, sizeof(m->cfg->offset));
   // Lua config file
   m->lua = lua_open();
   luaL_openlibs(m->lua);

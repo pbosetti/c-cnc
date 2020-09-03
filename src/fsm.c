@@ -23,9 +23,11 @@ The finite state machine has:
 
 // block callback                                       
 void print_block_descr(block_t *b, void*userdata) {
+  struct machine *m = (struct machine *)userdata;
   // print block descrption on stderr
   fprintf(stderr, "\n");
   block_print(b, stderr);
+  fprintf(stderr, "Offset: %9.3f %9.3f %9.3f\n", m->cfg->offset[0], m->cfg->offset[1], m->cfg->offset[2]);
   // print column header for data table on stdout at the
   // beginning of each g-code block
   printf("#n type t_time b_time error x y z mx my mz\n");
@@ -38,6 +40,7 @@ block_ctrl_t time_loop(block_t *b, data_t t, void *userdata) {
   point_t *position;
   data_t error;
   static data_t cur_time = 0; // static vars retain their value between calls
+  data_t *offset = m->cfg->offset;
 
   // timing: keep track of passing time and wait until
   // system clock elapses the next multiple of tq
@@ -55,6 +58,18 @@ block_ctrl_t time_loop(block_t *b, data_t t, void *userdata) {
       position = &p;
       break;
     }
+    case SET_OFFSET: {
+      offset[0] += b->offset.x;
+      offset[1] += b->offset.y;
+      offset[2] += b->offset.z;
+      return STOP;
+    }
+    case CLEAR_OFFSET: {
+      offset[0] = 0.0;
+      offset[1] = 0.0;
+      offset[2] = 0.0;
+      return STOP;
+    }
     // motion types that are not implemented (yet): give warning
     // and move to the next g-code block
     case ARC_CW:
@@ -69,7 +84,7 @@ block_ctrl_t time_loop(block_t *b, data_t t, void *userdata) {
   }
 
   // communicate with the machine
-  machine_go_to(m, position->x, position->y, position->z); // axes setpoints
+  machine_go_to(m, position->x + offset[0], position->y + offset[1], position->z + offset[2]); // axes setpoints
   machine_do_step(m, m->cfg->tq);                          // forward integrate axes dynamics
   // get the position error (distance of actual position from nominal position)
   error = machine_error(m);
@@ -163,7 +178,7 @@ state_t do_idle(state_data_t *sd) {
   char c;
 
   syslog(LOG_INFO, "[FSM] In state idle");
-  fprintf(stderr, "Do you want to:\n 1. run %s\n 2. quit\nType 1 or 2: ", sd->program_file);
+  fprintf(stderr, "Do you want to:\n 1. run %s\n 2. set offset to current position\n 3. show status\n 4. quit\nType 1-4: ", sd->program_file);
   c = getchar();
   fflush(stdin); // drop further characters in stream
   switch (c) {
@@ -172,13 +187,18 @@ state_t do_idle(state_data_t *sd) {
     next_state = STATE_RUN;
     break;
   case '2':
-    next_state = STATE_STOP;
-    break;
+    sd->m->cfg->offset[0] = sd->m->viewer->coord[0];
+    sd->m->cfg->offset[1] = sd->m->viewer->coord[1];
+    sd->m->cfg->offset[2] = sd->m->viewer->coord[2];
   case '3':
     machine_set_position_from_viewer(sd->m);
     fprintf(stderr, "Machine now at: %9.3f %9.3f %9.3f\n", sd->m->x->x, sd->m->y->x, sd->m->z->x);
     fprintf(stderr, "    velocities: %9.3f %9.3f %9.3f\n", sd->m->x->v, sd->m->y->v, sd->m->z->v);
     fprintf(stderr, "        viewer: %9.3f %9.3f %9.3f\n", sd->m->viewer->coord[0], sd->m->viewer->coord[1], sd->m->viewer->coord[2]);
+    fprintf(stderr, "        offset: %9.3f %9.3f %9.3f\n", sd->m->cfg->offset[0], sd->m->cfg->offset[1], sd->m->cfg->offset[2]);
+    break;
+  case '4':
+    next_state = STATE_STOP;
     break;
   }
   

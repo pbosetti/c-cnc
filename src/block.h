@@ -21,6 +21,8 @@ typedef enum {
   LINE,
   ARC_CW,
   ARC_CCW,
+  SET_OFFSET = 92,
+  CLEAR_OFFSET = 93,
   NO_MOTION
 } block_type_t;
 
@@ -41,6 +43,7 @@ typedef struct block {
   data_t spindle;                // spindle speed
   data_t feedrate;               // tool feedrate
   point_t target;                // target position at the end of block
+  point_t offset;
   data_t length;                 // block length
   point_t delta;                 // delta coordinates
   block_profile_t *prof;         // velocity profile data

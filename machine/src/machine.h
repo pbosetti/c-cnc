@@ -70,6 +70,7 @@ struct machine_config {
   data_t tq;
   data_t error;
   data_t zero[3];
+  data_t offset[3];
 };
 
 typedef struct lua_State lua_State;

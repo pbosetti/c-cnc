@@ -118,6 +118,7 @@ block_t *block_new(char *line, block_t *prev) {
     prev->next = b;
   } else { // this is the first block
     memset(b, 0, sizeof(block_t)); // set all the contents of block to 0
+    b->offset = point_new();
     b->prev = NULL;
   }
 
@@ -160,6 +161,15 @@ int block_parse(block_t *block) {
     }
   }
   free(tofree);
+  if (block->type == SET_OFFSET) {
+    point_xyz(&block->offset, block->target.x, block->target.y, block->target.z);
+  }
+  else if (block->type == CLEAR_OFFSET) {
+    point_xyz(&block->offset, 0, 0, 0);
+  }
+  if (block->type > ARC_CCW && block->prev) {
+    point_xyz(&block->target, block->prev->target.x, block->prev->target.y, block->prev->target.z);
+  }
   block_compute(block);
   return EXIT_SUCCESS;
 }
