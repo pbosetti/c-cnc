@@ -1,4 +1,4 @@
-# `machine` library
+# machine library
 
 This library implements the dynamic simulator of a three axes machine tool.
 
