@@ -23,7 +23,10 @@ void array_print(data_t ary[], int len) {
 
 #define ARY_LEN 6
 int main() {
-  point_t pt = {x:0, y:0, z:0};
+  // two possible initializers for structs:
+  // point_t pt = {z:0, y:0, z:0};
+  // or:
+  point_t pt = {.x=0, .y=0, .z=0};
   point_print(pt);
   pt.x = 123.456;
   point_print(pt);
