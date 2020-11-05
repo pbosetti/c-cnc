@@ -1,3 +1,6 @@
+/*
+  Lesson of 201105
+*/
 #include <stdio.h>
 
 typedef double data_t;
@@ -26,7 +29,23 @@ int main() {
   point_print(pt);
   printf("pt.x = %f\n", pt.x);
 
+  // this is valid:
   data_t ary[ARY_LEN] = {1, 2, 3, 4, 5, 6, 7};
   array_print(ary, ARY_LEN);
+
+  // this is valid but to be avoided for it can generate bugs:
+  //   data_t ary[] = {1, 2, 3, 4, 5, 6, 7};
+  //   array_print(ary, ARY_LEN);
+  // as you see, ary is created with 7 elements, but only 6 are printed;
+  // if later on you reduce the iniialization to 5 elements or increase
+  // ARY_LEN to 8 (or more), then the print loop will fail, accessing memory
+  // locations past the array end (resulting in random numbers or crash)
+
+  // this is invalid:
+  //   int len = 6
+  //   data_t ary[len] = {1, 2, 3, 4, 5, 6};
+  // because variable length arrays cannot be initialized: they can only be
+  // declared, and then filled one element at a time.
+
   return 0;
 }
