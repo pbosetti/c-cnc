@@ -8,10 +8,12 @@
 typedef double data_t;
 typedef unsigned int index_t;
 
+// coordinate object
 typedef struct {
   data_t x, y;
 } point_t;
 
+// polygon object
 typedef struct {
   index_t id;
   char *name;

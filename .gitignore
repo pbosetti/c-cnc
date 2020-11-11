@@ -3,7 +3,6 @@
 /examples/*
 !/examples/*.md
 !/examples/src
-.vscode
 build
 /bin/*
 !/bin/*.lua
