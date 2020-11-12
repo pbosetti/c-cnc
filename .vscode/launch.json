@@ -7,7 +7,23 @@
     {
       "type": "lldb",
       "request": "launch",
-      "name": "Debug of pointers",
+      "name": "files",
+      "program": "${workspaceFolder}/examples/files",
+      "args": ["table.txt", "10"],
+      "cwd": "${workspaceFolder}/examples"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "poly",
+      "program": "${workspaceFolder}/examples/poly",
+      "args": [],
+      "cwd": "${workspaceFolder}/examples"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "pointers",
       "program": "${workspaceFolder}/examples/pointers",
       "args": [],
       "cwd": "${workspaceFolder}/examples"
