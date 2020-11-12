@@ -6,8 +6,9 @@
 
 typedef double data_t;
 
+// list of possible return types from the main function
 typedef enum {
-  ERROR_SUCCESS = 0,
+  ERROR_SUCCESS = 0, // default success exit
   ERROR_ARGS,
   ERROR_WRITE,
   ERROR_READ
@@ -31,12 +32,16 @@ int main(int argc, char **argv) {
   // first step: create a file with a table of powers
   {
     size_t i;
-    FILE *f = fopen(filename, "w");
+    // open a file for writing (creates if it does not exist, overwrite
+    // otherwise)
+    FILE *f = fopen(filename, "w"); // f is NULL on failure
     if (!f) {
       fprintf(stderr, "Could not open %s for writing!\n", filename);
       return ERROR_WRITE;
     }
+    // print the first line on the file (a comment header)
     fprintf(f, "# n sq(n)\n");
+    // fill the file, one line at a time
     for (i = 0; i < n; i++) {
       fprintf(f, "%ld; %f\n", i, (float)i*i);
     }
@@ -63,22 +68,23 @@ int main(int argc, char **argv) {
   {
     FILE *f = fopen(filename, "r");
     char line[MAX_LINE_LEN];
-    char *word, *str;
+    char *word, *str; // support pointers for strsep()
     if (!f) {
       fprintf(stderr, "Could not open %s for reading!\n", filename);
       return ERROR_READ;
     }
 
+    // loop over each line
     while (fgets(line, MAX_LINE_LEN, f)) {
       if (line[0] == '#') continue;
       str = line;
+      // for the current line, loop over each field
       while ((word = strsep(&str, ",; ")) != NULL) {
-        if (strlen(word) == 0) continue;
+        if (strlen(word) == 0) continue; // skip empty words
         printf("%f ", atof(word));
       }
-      printf("\n");
+      printf("\n"); // terminate current line
     }
-
     fclose(f);
   }
 
