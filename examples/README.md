@@ -2,8 +2,8 @@
 
 ## Notes and caveats
 
-* Remember to save the file before compiling (CRTL-S)
-* Respect proper indentations (2 spaces, inserted by hiting the Tab key; increase indentation by one level for each nested block)
+* Remember to save the file before compiling (CTRL-S)
+* Respect proper indentations (2 spaces, inserted by hitting the Tab key; increase indentation by one level for each nested block)
 
 ## Libraries
 
