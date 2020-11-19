@@ -4,9 +4,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+//   ____  _                   _       
+//  / ___|| |_ _ __ _   _  ___| |_ ___ 
+//  \___ \| __| '__| | | |/ __| __/ __|
+//   ___) | |_| |  | |_| | (__| |_\__ \
+//  |____/ \__|_|   \__,_|\___|\__|___/
+                                    
 // 1. Define the structs representing the objects:
 
-// A structire representing the elements to be stored in the
+// A structure representing the elements to be stored in the
 // linked list
 typedef struct {
   char *name;
@@ -16,9 +22,17 @@ typedef struct {
 
 // A structure representing the list itself
 typedef struct {
+  size_t length;
   element_t *first, *last;
 } list_t;
 
+
+//   _____                 _   _                 
+//  |  ___|   _ _ __   ___| |_(_) ___  _ __  ___ 
+//  | |_ | | | | '_ \ / __| __| |/ _ \| '_ \/ __|
+//  |  _|| |_| | | | | (__| |_| | (_) | | | \__ \
+//  |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
+                                              
 // 2. Define the functions for dealing with the list
 
 // Create a new list, with one element newly created with "name"
@@ -31,6 +45,7 @@ list_t *list_new(char *name) {
   e->next = NULL; // can behave differently, so better safe than sorry
   l->first = e; // e is the only element, so it is both the first
   l->last =e;   // and the last
+  l->length = 1;
   return l; // return the new list (as a pointer)
 }
 
@@ -40,6 +55,7 @@ void list_append_element(list_t *list, element_t *e) {
   e->prev = list->last; // previous item of e is the current last element
   list->last = e; // last element of the list is e
   e->next = NULL; // just to be sure
+  list->length++;
 }
 
 // create and append a new element with "name"
@@ -70,6 +86,22 @@ void list_insert(list_t *list, char *name, char *after) {
       break; // stop searching after the first item is found
     }
   } while ((e = e->next));
+  list->length++;
+}
+
+void list_delete(list_t *list, char *name) {
+  element_t *e;
+  e = list->first;
+  do {
+    if (strcmp(e->name, name) == 0) {
+      ((element_t *)e->prev)->next = e->next;
+      ((element_t *)e->next)->prev = e->prev;
+      free(e->name);
+      free(e);
+    }
+    break;
+  } while ((e = e->next));
+  list->length--;
 }
 
 // free memory
@@ -86,7 +118,46 @@ void list_free(list_t *list) {
   free(list);
 }
 
+typedef enum {ASC, DESC} loop_order_t;
+typedef void (*loop_fun_t)(element_t *e, loop_order_t order, void *userdata);
 
+void list_loop(list_t *list, loop_fun_t f, loop_order_t order, void *userdata) {
+  element_t *e;
+  if (order == ASC) e = list->first;
+  else e = list->last;
+
+  do {
+    // call the function f
+    f(e, order, userdata);
+    if (order == ASC) e = e->next;
+    else e = e->prev;
+  } while (e);
+}
+
+//    ____      _ _ ____             _        
+//   / ___|__ _| | | __ )  __ _  ___| | _____ 
+//  | |   / _` | | |  _ \ / _` |/ __| |/ / __|
+//  | |__| (_| | | | |_) | (_| | (__|   <\__ \
+//   \____\__,_|_|_|____/ \__,_|\___|_|\_\___/
+                                       
+void print_element(element_t *e, loop_order_t order, void *userdata) {
+  printf("%10s: %15p -> %15p -> %15p\n", e->name, e->prev, e, e->next);
+}
+
+void print_element_with_num(element_t *e, loop_order_t order, void *userdata) {
+  size_t *i = (size_t *)userdata;
+  printf("list[%ld] = %s\n", *i, e->name);
+  if (order == ASC) (*i)++;
+  else (*i)--;
+}
+
+
+//                   _       
+//   _ __ ___   __ _(_)_ __  
+//  | '_ ` _ \ / _` | | '_ \ 
+//  | | | | | | (_| | | | | |
+//  |_| |_| |_|\__,_|_|_| |_|
+                          
 int main() {
   char names[4][10] = {"one", "two", "three", "four"};
   element_t *e;
@@ -109,18 +180,15 @@ int main() {
   list_insert(list, "two.five", "two");
 
   // loop from first to last element:
-  e = list->first;
-  i = 0;
-  do {
-    printf("element %ld: %s\n", i++, e->name);
-  } while ((e = e->next));
+  list_loop(list, print_element, ASC, NULL);
 
-  // reverse loop:
-  e = list->last;
+  // loop:
   i = 0;
-  do {
-    printf("element %ld: %s\n", i++, e->name);
-  } while ((e = e->prev));
+  list_loop(list, print_element_with_num, ASC, &i);
+
+  // again in descending order
+  i = list->length - 1;
+  list_loop(list, print_element_with_num, DESC, &i);
 
   // free memory:
   list_free(list);
