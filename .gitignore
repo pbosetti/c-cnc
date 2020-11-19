@@ -7,4 +7,3 @@ build
 /bin/*
 !/bin/*.lua
 /lib/*
-/*.txt
