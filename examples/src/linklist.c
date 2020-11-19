@@ -89,17 +89,21 @@ void list_insert(list_t *list, char *name, char *after) {
   list->length++;
 }
 
+// delete an element with a given name
 void list_delete(list_t *list, char *name) {
   element_t *e;
   e = list->first;
   do {
     if (strcmp(e->name, name) == 0) {
+      // detach pointers from current element and 
+      // attach them to the previous and next elements
       ((element_t *)e->prev)->next = e->next;
       ((element_t *)e->next)->prev = e->prev;
+      // free memory taken from current element
       free(e->name);
       free(e);
+      break;
     }
-    break;
   } while ((e = e->next));
   list->length--;
 }
@@ -118,9 +122,13 @@ void list_free(list_t *list) {
   free(list);
 }
 
+// enum for the two possible direction in enumerating the list
 typedef enum {ASC, DESC} loop_order_t;
+// prototype for callback function (named loop_fun_t)
 typedef void (*loop_fun_t)(element_t *e, loop_order_t order, void *userdata);
 
+// loop over the list and call the loop_fun_t f on each list element
+// userdata can hold any pointer, and it is passed transparently to the callback
 void list_loop(list_t *list, loop_fun_t f, loop_order_t order, void *userdata) {
   element_t *e;
   if (order == ASC) e = list->first;
@@ -141,10 +149,12 @@ void list_loop(list_t *list, loop_fun_t f, loop_order_t order, void *userdata) {
 //   \____\__,_|_|_|____/ \__,_|\___|_|\_\___/
                                        
 void print_element(element_t *e, loop_order_t order, void *userdata) {
+  // here we don't use order nor userdata
   printf("%10s: %15p -> %15p -> %15p\n", e->name, e->prev, e, e->next);
 }
 
 void print_element_with_num(element_t *e, loop_order_t order, void *userdata) {
+  // before using a void*, we need to convert it (cast) into a proper type:
   size_t *i = (size_t *)userdata;
   printf("list[%ld] = %s\n", *i, e->name);
   if (order == ASC) (*i)++;
@@ -189,6 +199,11 @@ int main() {
   // again in descending order
   i = list->length - 1;
   list_loop(list, print_element_with_num, DESC, &i);
+
+  // remove an element
+  list_delete(list, "two.five");
+  i = 0;
+  list_loop(list, print_element, ASC, NULL);
 
   // free memory:
   list_free(list);
