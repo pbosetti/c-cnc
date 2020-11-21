@@ -20,6 +20,7 @@ point_t point_new() {
 // --------------
 //  OR: xxxx xxx1
 void point_x(point_t *p, data_t v) {
+  assert(p);
   p->x = v;
   p->s = p->s | X_SET;
 }
@@ -30,6 +31,7 @@ void point_x(point_t *p, data_t v) {
 // --------------
 //  OR: xxxx xx1x
 void point_y(point_t *p, data_t v) {
+  assert(p);
   p->y = v;
   p->s |= Y_SET;
 }
@@ -40,6 +42,7 @@ void point_y(point_t *p, data_t v) {
 // --------------
 //  OR: xxxx x1xx
 void point_z(point_t *p, data_t v) {
+  assert(p);
   p->z = v;
   p->s |= Z_SET;
 }
@@ -50,6 +53,7 @@ void point_z(point_t *p, data_t v) {
 // --------------
 //  OR: xxxx x111
 void point_xyz(point_t *p, data_t x, data_t y, data_t z) {
+  assert(p);
   p->x = x;
   p->y = y;
   p->z = z;
@@ -103,6 +107,7 @@ void point_modal(point_t *p1, point_t *p2) {
 //   point_desc(pt, &desc);
 //   printf("Point: %s\n", desc);
 void point_inspect(point_t *p, char **desc) {
+  assert(p);
   // local (on stack) temporary strings
   char str_x[9], str_y[9], str_z[9];
   // fill local strings with coords descriptions
