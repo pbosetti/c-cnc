@@ -74,7 +74,7 @@ void list_loop(list_t *list, loop_fun f, loop_order_t order, void *userdata) {
     e = list->last;
 
   do {
-    if (f(e, userdata) == 0) break;
+    if (f(e, userdata) != 0) break;
     if (order == FIRST) e = e->next;
     else e = e->prev;
   } while (e);
@@ -92,7 +92,7 @@ void list_loop(list_t *list, loop_fun f, loop_order_t order, void *userdata) {
 // print all elements
 int print_all(element_t *e, void *userdata) {
   printf("%8s, %15p -> %15p -> %15p\n", e->name, e->prev, e, e->next);
-  return 1;
+  return 0;
 }
 
 // Print a range of elements, from start to start+span
@@ -113,7 +113,7 @@ int print_range(element_t *e, void *userdata) {
   // or if we reached the end of the list
   if (e == NULL || i >= rng->start + rng->span) {
     i = 0;
-    return 0;
+    return 1;
   } 
 
   // Only print if we past the start of range
@@ -123,7 +123,7 @@ int print_range(element_t *e, void *userdata) {
 
   // increment the counter
   i++;
-  return 1;
+  return 0;
 }
 
 
