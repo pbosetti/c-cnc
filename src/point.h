@@ -2,15 +2,8 @@
 #ifndef POINT_H
 #define POINT_H
 
-#define _GNU_SOURCE // needed for asprintf
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <math.h>
-#include <assert.h>
-#include <string.h>
-
-typedef double data_t;
+// master include
+#include "ccnc.h"
 
 // A 3-D point object: it has three coordinates and a bitmask field
 // for tracking which coordinate is set and which is unset

@@ -128,3 +128,37 @@ void point_inspect(point_t *p, char **desc) {
   // the local strings
   asprintf(desc, "[%s %s %s]", str_x, str_y, str_z);
 }
+
+
+// example main() - it is only compiled if the 
+// macro POINT_MAIN is defined, either in the source files
+// or - more conveniently - on the command line of the
+// compiler, with the switch -DPOINT_MAIN
+#ifdef POINT_MAIN
+int main() {
+  point_t p1 = point_new();
+  point_t p2 = point_new();
+  point_t delta = point_new();
+  char *desc_p1, *desc_p2;
+
+  point_xyz(&p1, 0, 0, 0);
+  point_x(&p2, 100);
+  point_z(&p2, 100);
+
+  point_inspect(&p1, &desc_p1);
+  point_inspect(&p2, &desc_p2);
+  printf("p1: %s, p2: %s\n", desc_p1, desc_p2);
+
+  point_modal(&p1, &p2);
+  point_inspect(&p1, &desc_p1);
+  point_inspect(&p2, &desc_p2);
+  printf("p1: %s, p2: %s\n", desc_p1, desc_p2);
+
+  printf("Distance p1-p2: %f\n", point_dist(&p1, &p2));
+  point_delta(&p1, &p2, &delta);
+  point_inspect(&delta, &desc_p2);
+  printf("Delta p1-p2: %s\n", desc_p2);
+
+  return 0;
+}
+#endif
