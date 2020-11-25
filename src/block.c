@@ -86,7 +86,7 @@ int block_parse(block_t *block) {
 
   while ((word  = strsep(&line, " ")) != NULL) {
     // parse each word
-    // "x123.9" -> 'X', "123.9"
+    // "x123.9" ->         'X',              "123.9"
     block_set_field(block, toupper(word[0]), word + 1);
   }
   free(to_free);
