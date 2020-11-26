@@ -8,10 +8,10 @@
     {
       "type": "lldb",
       "request": "launch",
-      "name": "linklist",
-      "program": "${workspaceFolder}/examples/linklist",
+      "name": "block_test",
+      "program": "${workspaceFolder}/block_test",
       "args": [],
-      "cwd": "${workspaceFolder}/examples"
+      "cwd": "${workspaceFolder}/"
     },
     {
       "type": "lldb",
