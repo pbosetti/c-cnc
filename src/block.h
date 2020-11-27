@@ -42,6 +42,8 @@ typedef struct block {
   // Linked list pointers:
   struct block *next; // This allows b->next->line 
   struct block *prev;
+  // machine configuration:
+  struct machine_config *config;
 } block_t;
 
 
@@ -53,7 +55,7 @@ typedef struct block {
                                               
 // create a new block, prev is the previous one
 // (it can be NULL for the first block)
-block_t *block_new(char *line, block_t *prev);
+block_t *block_new(char *line, block_t *prev, struct machine_config *cfg);
 
 // free memory for block
 void block_free(block_t *block);

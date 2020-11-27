@@ -8,18 +8,18 @@
     {
       "type": "lldb",
       "request": "launch",
-      "name": "block_test",
-      "program": "${workspaceFolder}/block_test",
-      "args": [],
+      "name": "fsm_test",
+      "program": "${workspaceFolder}/fsm_test",
+      "args": ["test.g"],
       "cwd": "${workspaceFolder}/"
     },
     {
       "type": "lldb",
       "request": "launch",
-      "name": "poly",
-      "program": "${workspaceFolder}/examples/poly",
-      "args": [],
-      "cwd": "${workspaceFolder}/examples"
+      "name": "ccnc",
+      "program": "${workspaceFolder}/bin/ccnc",
+      "args": ["test.g"],
+      "cwd": "${workspaceFolder}/"
     },
     {
       "type": "lldb",

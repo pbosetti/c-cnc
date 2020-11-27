@@ -1,0 +1,32 @@
+digraph "C_CNC" {
+  init
+  idle
+  load_block
+  rapid_move
+  linear_move
+  no_move
+  stop
+
+  init -> idle [label="reset"]
+  idle -> idle
+  idle -> load_block
+  load_block -> idle [label="reset"]
+  load_block -> stop
+
+  load_block -> rapid_move
+  rapid_move-> rapid_move
+  rapid_move -> load_block
+  rapid_move -> idle [label="reset"]
+  rapid_move -> stop
+
+  load_block -> linear_move
+  linear_move-> linear_move
+  linear_move -> load_block
+  linear_move -> idle [label="reset"]
+  linear_move -> stop
+  
+  load_block -> no_move
+  no_move -> load_block
+
+  idle -> stop
+}
