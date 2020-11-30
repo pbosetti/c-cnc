@@ -26,10 +26,10 @@ include_directories(
 #     second argument is the type of the library (STATIC of SHARED)
 #     third argument is a list of source files
 add_library(ccnclib STATIC ${LIB_SOURCES})
-target_link_libraries(ccnclib m)
+target_link_libraries(ccnclib m machine)
 
-add_executable(test ${SOURCE_DIR}/main/test.c)
-target_link_libraries(exam ccnclib)
+add_executable(ccnc ${SOURCE_DIR}/main/ccnc.c)
+target_link_libraries(ccnc ccnclib)
 
 
 # INSTALL
