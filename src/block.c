@@ -6,11 +6,11 @@
 #define MACHINE_D 5
 #define MACHINE_TQ 0.005
 
-//   ____       _            _       
-//  |  _ \ _ __(_)_   ____ _| |_ ___ 
+//   ____       _            _
+//  |  _ \ _ __(_)_   ____ _| |_ ___
 //  | |_) | '__| \ \ / / _` | __/ _ \
 //  |  __/| |  | |\ V / (_| | ||  __/
-//  |_|   |_|  |_| \_/ \__,_|\__\___|                                 
+//  |_|   |_|  |_| \_/ \__,_|\__\___|
 // Static, or private, functions
 // are only accessible from within this file
 
@@ -113,11 +113,11 @@ static point_t point_zero(block_t *b) {
   return p0;
 }
 
-//   ____        _     _ _                               
-//  |  _ \ _   _| |__ | (_) ___                          
-//  | |_) | | | | '_ \| | |/ __|                         
-//  |  __/| |_| | |_) | | | (__                          
-//  |_|    \__,_|_.__/|_|_|\___|                                                                               
+//   ____        _     _ _
+//  |  _ \ _   _| |__ | (_) ___
+//  | |_) | | | | '_ \| | |/ __|
+//  |  __/| |_| | |_) | | | (__
+//  |_|    \__,_|_.__/|_|_|\___|
 // functions
 
 block_t *block_new(char *line, block_t *prev) {
@@ -175,7 +175,7 @@ int block_parse(block_t *block) {
     rv = block_set_field(block, toupper(word[0]), word + 1);
   }
   free(to_free);
-  
+
   // inherit from previous block
   p0 = point_zero(block);
   point_modal(&p0, &block->target);
@@ -213,7 +213,7 @@ data_t block_lambda(block_t *b, data_t t) {
   }
   else if (t < (dt_1 + dt_m + dt_2)) { // deceleration
     data_t t_2 = dt_1 + dt_m;
-    r = f * dt_1 / 2.0 + f * (dt_m + t - t_2) + 
+    r = f * dt_1 / 2.0 + f * (dt_m + t - t_2) +
         d / 2.0 * (pow(t, 2) + pow(t_2, 2)) - d * t * t_2;
     r /= b->prof->l;
   }
@@ -252,7 +252,7 @@ void block_print(block_t *b, FILE *out) {
   // CRUCIAL!!! or you'll have memory leaks!
   free(t);
   free(p);
-  
+
 }
 
 #ifdef BLOCK_MAIN
