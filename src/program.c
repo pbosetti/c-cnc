@@ -36,8 +36,10 @@ void program_free(program_t *p) {
 // return either EXIT_SUCCESS or EXIT_FAILURE
 int program_parse(program_t *p, struct machine_config *cfg) {
   assert(p);
-  char *line;
+  char *line = NULL;
   ssize_t line_len = 0;
+  size_t n = 0;
+
   block_t *b;
 
   p->file = fopen(p->filename, "r");
@@ -47,7 +49,7 @@ int program_parse(program_t *p, struct machine_config *cfg) {
   }
 
   p->n = 0;
-  while ( (line_len = getline(&line, NULL, p->file)) >= 0) {
+  while ( (line_len = getline(&line, &n, p->file)) >= 0) {
     line[line_len-1] = '\0'; // remove trailing newline (\n) replacing it with a terminator
     b = block_new(line, p->last, cfg);
     if (block_parse(b) == EXIT_FAILURE) {
@@ -59,6 +61,7 @@ int program_parse(program_t *p, struct machine_config *cfg) {
     p->n++;
   }
   fclose(p->file);
+  free(line);
   program_reset(p);
   return EXIT_SUCCESS;
 }
