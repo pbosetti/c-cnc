@@ -1,10 +1,6 @@
 #include "block.h"
 #include <ctype.h>
 
-// machine propertes
-#define MACHINE_A 10
-#define MACHINE_D 5
-#define MACHINE_TQ 0.005
 
 //   ____       _            _
 //  |  _ \ _ __(_)_   ____ _| |_ ___
@@ -66,22 +62,22 @@ static void block_compute(block_t *b) {
   data_t dt, dt_1, dt_2, dt_m, dq;
   data_t f_m, l;
 
-  A = MACHINE_A;
-  D = MACHINE_D;
+  A = b->config->A;
+  D = b->config->D;
   f_m = b->feedrate / 60.0;
   l = b->length;
   dt_1 = f_m / A;
   dt_2 = f_m / D;
   dt_m = l / f_m - (dt_1 + dt_2) / 2.0;
   if (dt_m > 0) { // trapezoidal velocity profile
-    dt = quantize(dt_1 + dt_2 + dt_m, MACHINE_TQ, &dq);
+    dt = quantize(dt_1 + dt_2 + dt_m, b->config->tq, &dq);
     dt_m += dq;
     f_m = (2 * l) / (dt_1 + dt_2 + 2 * dt_m);
   }
   else { // triangular velocity profile
     dt_1 = sqrt(2 * l / (A + pow(A, 2) / D));
     dt_2 = dt_1 * A / D;
-    dt = quantize(dt_1 + dt_2, MACHINE_TQ, &dq);
+    dt = quantize(dt_1 + dt_2, b->config->tq, &dq);
     dt_m = 0;
     dt_2 += dq;
     f_m = 2 * l / (dt_1 + dt_2);
@@ -120,7 +116,7 @@ static point_t point_zero(block_t *b) {
 //  |_|    \__,_|_.__/|_|_|\___|
 // functions
 
-block_t *block_new(char *line, block_t *prev) {
+block_t *block_new(char *line, block_t *prev, struct machine_config *cfg) {
   assert(line);
   block_t *b = malloc(sizeof(block_t));
   assert(b);
@@ -146,6 +142,8 @@ block_t *block_new(char *line, block_t *prev) {
   // copy line to b->line
   b->line = malloc(strlen(line) + 1);
   strcpy(b->line, line);
+  b->config = cfg;
+  b->type = NO_MOTION;
   return b;
 }
 
@@ -247,7 +245,7 @@ void block_print(block_t *b, FILE *out) {
   point_inspect(&b->target, &t);
   point_inspect(&p0, &p);
 
-  fprintf(out, "%03zu: %s -> %s F%7.1f S%7.1f T%2zu (%d)\n", b->n, p, t, b->feedrate, b->spindle, b->tool, b->type);
+  fprintf(out, "%03u: %s -> %s F%7.1f S%7.1f T%2u (%d)\n", b->n, p, t, b->feedrate, b->spindle, b->tool, b->type);
 
   // CRUCIAL!!! or you'll have memory leaks!
   free(t);
@@ -259,18 +257,19 @@ void block_print(block_t *b, FILE *out) {
 int main() {
   block_t *b1, *b2;
   data_t t, lambda;
+  struct machine_config cfg = {.A = 10, .D=5, .tq=0.005};
   point_t p = point_new();
   char *p_desc;
 
-  b1 = block_new("N10 G00 X100 Y100 z100 t3", NULL);
+  b1 = block_new("N10 G00 X100 Y100 z100 t3", NULL, &cfg);
   block_parse(b1);
-  b2 = block_new("N20 G01 Y120 X110 f1000 s2000", b1);
+  b2 = block_new("N20 G01 Y120 X110 f1000 s2000", b1, &cfg);
   block_parse(b2);
 
   block_print(b1, stderr);
   block_print(b2, stderr);
 
-  for (t = 0; t <= b2->prof->dt; t += MACHINE_TQ) {
+  for (t = 0; t <= b2->prof->dt; t += cfg.tq) {
     lambda = block_lambda(b2, t);
     p = block_interpolate(b2, lambda);
     printf("%f %f %f %f %f\n", t, lambda, p.x, p.y, p.z);

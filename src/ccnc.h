@@ -10,8 +10,10 @@
 #include <assert.h>
 #include <string.h>
 
+#include <machine.h>
+
 typedef double data_t;
-typedef size_t index_t;
+typedef uint32_t index_t;
 
 
 

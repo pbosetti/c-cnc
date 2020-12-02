@@ -8,9 +8,9 @@
     {
       "type": "lldb",
       "request": "launch",
-      "name": "block_test",
-      "program": "${workspaceFolder}/block_test",
-      "args": [],
+      "name": "program_test",
+      "program": "${workspaceFolder}/program_test",
+      "args": ["test.g"],
       "cwd": "${workspaceFolder}/"
     },
     {
