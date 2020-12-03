@@ -2,7 +2,7 @@
     "configurations": [
         {
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/machine/src"
             ],
             "defines": ["PROGRAM_MAIN", "BLOCK_MAIN", "POINT_MAIN", "TEST_MAIN"],
             "macFrameworkPath": [
