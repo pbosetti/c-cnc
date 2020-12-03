@@ -10,9 +10,11 @@ digraph "C-CNC" {
 
   # list of transitions
   init->idle [label="reset"]
+  init->stop
   idle->idle
   idle->load_block
   load_block->idle [label="reset"]
+  load_block->stop
 
   load_block->rapid_move
   rapid_move->rapid_move

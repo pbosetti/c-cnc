@@ -17,18 +17,16 @@ The finite state machine has:
 #include "ccnc.h"
 #include <stdlib.h>
 #include <machine.h>
-#include "program.c"
+#include "program.h"
 
 // State data object
-// By default set to void; override this typedef or load the proper
-// header if you need
 typedef struct {
-  int argc;
-  char **argv;
-  struct machine *machine;
-  program_t *program;
-  data_t block_time; // elapsed since beginning of block
-  data_t total_time; // elapsed since start of program execution
+  int argc;                // command line arguments count
+  char **argv;             // command line arguments vector
+  struct machine *machine; // pointer to the machine simulator
+  program_t *program;      // pointer to the G-code program interpreter
+  data_t block_time;       // elapsed since beginning of block
+  data_t total_time;       // elapsed since start of program execution
 } state_data_t;
 
 // NOTHING SHALL BE CHANGED AFTER THIS LINE!
@@ -56,7 +54,7 @@ typedef void transition_func_t(state_data_t *data);
 // State functions
 
 // Function to be executed in state init
-// valid return states: STATE_IDLE
+// valid return states: STATE_IDLE, STATE_STOP
 state_t do_init(state_data_t *data);
 
 // Function to be executed in state idle
@@ -64,7 +62,7 @@ state_t do_init(state_data_t *data);
 state_t do_idle(state_data_t *data);
 
 // Function to be executed in state load_block
-// valid return states: STATE_IDLE, STATE_RAPID_MOVE, STATE_LINEAR_MOVE, STATE_NO_MOVE
+// valid return states: STATE_IDLE, STATE_RAPID_MOVE, STATE_LINEAR_MOVE, STATE_NO_MOVE, STATE_STOP
 state_t do_load_block(state_data_t *data);
 
 // Function to be executed in state stop

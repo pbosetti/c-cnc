@@ -68,24 +68,37 @@ state_t do_init(state_data_t *data) {
   char this_path[PATH_MAX];
   struct machine_config *cfg;
 
+  // machine_new() wants the path to the configuration file. It must be in the
+  // same folder of the executable. The path to the current executable
+  // is in argv[0], so we need to pick its directory part and append the
+  // name of the config file (which is config.lua)
   strncpy(this_path, dirname(data->argv[0]), PATH_MAX);
   sprintf(config_path, "%s/config.lua", this_path);
 
+  // check that we have exactly one argument on the command line
   if (data->argc != 2) {
     fprintf(stderr, "Missing G-code file name!\n");
     return STATE_STOP;
   }
 
+  // create new machine simulator with the configuration in config_path
   data->machine = machine_new(config_path);
+  // create a new program parser with the file passed to argv[1]
   data->program = program_new(data->argv[1]);
+  // for brevity, use cfg as an alias to data->machine->cfg:
   cfg = data->machine->cfg;
 
+  // stop if we have parsing errors
   if (program_parse(data->program, cfg) == EXIT_FAILURE) {
     fprintf(stderr, "Parsing error\n");
     return STATE_STOP;
   }
 
+  // print a program description
   program_print(data->program, stderr);
+
+  // reset the machine simulator so the axes are still and at the
+  // machine origin as defined in cfg->zero:
   machine_reset(data->machine);
   machine_set_position(data->machine, cfg->zero[0], cfg->zero[1], cfg->zero[2]);
   
@@ -106,6 +119,7 @@ state_t do_idle(state_data_t *data) {
   state_t next_state = NO_CHANGE;
 
   /* Your Code Here */
+  // reset total time counter and start processing the next block:
   data->total_time = 0.0;
   next_state = STATE_LOAD_BLOCK;
   
@@ -129,8 +143,12 @@ state_t do_load_block(state_data_t *data) {
 
   /* Your Code Here */
   block_t *b;
+
+  // load the next block
   program_next(data->program);
   b = data->program->current;
+
+  // process the block
   if (b == NULL) // reached the end of the program
     next_state = STATE_STOP;
   else {
