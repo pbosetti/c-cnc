@@ -18,6 +18,18 @@ The finite state machine has:
 
 // SEARCH FOR Your Code Here FOR CODE INSERTION POINTS!
 
+// Utility functions
+static inline void print_status(block_t *b, state_data_t *data, data_t error, point_t *pos) {
+  struct machine *m = data->machine;
+  printf("%3d %1d %7.3f %7.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f\n",
+    b->n, b->type, data->total_time, data->block_time, error,
+    pos->x, pos->y, pos->z,
+    m->x->x, m->y->x, m->z->x
+  );
+}
+
+
+
 // GLOBALS
 // State human-readable names
 const char *state_names[] = {"init", "idle", "load_block", "stop", "rapid_move", "linear_move", "no_move"};
@@ -66,6 +78,7 @@ state_t do_init(state_data_t *data) {
   /* Your Code Here */
   char config_path[PATH_MAX];
   char this_path[PATH_MAX];
+  char viewer_path[PATH_MAX];
   struct machine_config *cfg;
 
   // machine_new() wants the path to the configuration file. It must be in the
@@ -74,6 +87,7 @@ state_t do_init(state_data_t *data) {
   // name of the config file (which is config.lua)
   strncpy(this_path, dirname(data->argv[0]), PATH_MAX);
   sprintf(config_path, "%s/config.lua", this_path);
+  sprintf(viewer_path, "%s/MTViewer", this_path);
 
   // check that we have exactly one argument on the command line
   if (data->argc != 2) {
@@ -87,6 +101,7 @@ state_t do_init(state_data_t *data) {
   data->program = program_new(data->argv[1]);
   // for brevity, use cfg as an alias to data->machine->cfg:
   cfg = data->machine->cfg;
+  machine_enable_viewer(data->machine, viewer_path);
 
   // stop if we have parsing errors
   if (program_parse(data->program, cfg) == EXIT_FAILURE) {
@@ -122,6 +137,11 @@ state_t do_idle(state_data_t *data) {
   // reset total time counter and start processing the next block:
   data->total_time = 0.0;
   next_state = STATE_LOAD_BLOCK;
+
+  fprintf(stderr, "Press SPACEBAR in the viewer to start\n");
+  machine_wait_for_run(data->machine);
+  machine_set_position_from_viewer(data->machine);
+  wait_next(0);
   
   switch (next_state) {
     case NO_CHANGE:
@@ -215,7 +235,24 @@ state_t do_rapid_move(state_data_t *data) {
   state_t next_state = NO_CHANGE;
 
   /* Your Code Here */
+  data_t error;
+  struct machine *m = data->machine;
+  block_t *b = data->program->current;
+  point_t *pos = &(b->target);
+
+  machine_go_to(m, pos->x, pos->y, pos->z);
+  machine_do_step(m, m->cfg->tq);
+  error = machine_error(m);
   
+  data->block_time += m->cfg->tq;
+  data->total_time += m->cfg->tq;
+
+  if (error <= m->cfg->error)
+    next_state = STATE_LOAD_BLOCK;
+
+  // write current positions and times
+  print_status(b, data, error, pos);
+
   switch (next_state) {
     case NO_CHANGE:
     case STATE_LOAD_BLOCK:
@@ -235,7 +272,27 @@ state_t do_linear_move(state_data_t *data) {
   state_t next_state = NO_CHANGE;
 
   /* Your Code Here */
+  data_t error;
+  struct machine *m = data->machine;
+  block_t *b = data->program->current;
+  point_t pos;
+  data_t lambda;
+
+  lambda = block_lambda(b, data->block_time);
+  pos = block_interpolate(b, lambda);
+
+  machine_go_to(m, pos.x, pos.y, pos.z);
+  machine_do_step(m, m->cfg->tq);
+  error = machine_error(m);
   
+  data->block_time += m->cfg->tq;
+  data->total_time += m->cfg->tq;
+  if (data->block_time >= b->prof->dt)
+    next_state = STATE_LOAD_BLOCK;
+
+  // write current positions and times
+  print_status(b, data, error, &pos);
+
   switch (next_state) {
     case NO_CHANGE:
     case STATE_LOAD_BLOCK:
@@ -255,6 +312,7 @@ state_t do_no_move(state_data_t *data) {
   state_t next_state = STATE_LOAD_BLOCK;
 
   /* Your Code Here */
+  fprintf(stderr, "No move in line %s\n", data->program->current->line);
   
   switch (next_state) {
     case STATE_LOAD_BLOCK:
@@ -284,6 +342,7 @@ state_t do_no_move(state_data_t *data) {
 // 2. from load_block to idle
 void reset(state_data_t *data) {
   /* Your Code Here */
+  program_reset(data->program);
 }
 
 
