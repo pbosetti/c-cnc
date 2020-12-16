@@ -48,7 +48,7 @@ data_t pid_output(struct pid *pid, data_t dt) {
   pid->p = pid->kp * e;
   pid->i = pid->i + pid->ki * e * dt;
   pid->d = dt != 0 ? pid->kd * (e + pid->prev_error) / dt : 0.0;
-  output = pid->p + pid->i + pid->d;
+  output = pid->p + pid->i - pid->d;
   pid->saturate = 0;
   if (pid->saturation[0] != pid->saturation[1]) {
     if (output > pid->saturation[1]) {
