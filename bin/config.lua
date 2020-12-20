@@ -9,10 +9,10 @@ machine.cfg = {A=10, D=50, tq=0.005, error=0.05}
 machine.cfg.zero = {0, 0, 400}
 
 machine.x = {mass=2000, res=50000}
-machine.x.pid = {kp=7.5, ki=0.001, kd=1.25 * 2/3, saturation={-5000,5000}}
+machine.x.pid = {kp=2500, ki=0.01, kd=5.1, saturation={-5000,5000}}
 
 machine.y = {mass=1200, res=30000}
-machine.y.pid = {kp=13, ki=0, kd=0.7*2/3, saturation={-5000,5000}}
+machine.y.pid = {kp=2300, ki=0.01, kd=5, saturation={-5000,5000}}
 
 machine.z = {mass=700, res=30000}
-machine.z.pid = {kp=5, ki=0.1, kd=1*2/3, saturation={-2500,2500}}
+machine.z.pid = {kp=1800, ki=0.01, kd=3.5, saturation={-2500,2500}}
