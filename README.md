@@ -16,16 +16,13 @@ Building a project with Cmake is a two-step process. The first step is called
 contents needed for the compilation. The second step is called *compilation* and
 results in the products of the build to be created in the root of the `build`
 folder. There is an optional third step, *install*, that copies the build
-products into a destination folder.
+products into a destination folder. This project os configured to have the local `bin` forder as destination.
 
-1. (preliminary) if it does not exist already, create the folder `build` just
-   below the root of your project folder
-2. (configuring) from the terminal, `cd build` and the issue the command `cmake
-   ..`: this means *configure the project in the current directory, searching
-   for the `CMakeLists.txt` file in the previous directory
-3. (compilation) from the terminal, compile the project with the command `make` 
-4. (optional install) if you want to install the build products, type `make
-   install`: this copies binaries into the `bin` and `lib` folders of the root
+1. (configuring) from the terminal, be sure to be in the project's toot directory and then issue the command `cmake
+   -Bbuild -H.`: this means configure the project in the `build` directory, searching
+   for the `CMakeLists.txt` file in the current directory (taht is `.`)
+3. (compilation) from the terminal, compile the project with the command `make -Cbuild` 
+4. (optional install) if you want to install the build products, type `make - Cbuild install`: this copies binaries into the `bin` and `lib` folders of the root
    project folder
 
 **Note**: the `cmake` command must be run the first time, and then every time
