@@ -13,7 +13,11 @@ The finite state machine has:
 ******************************************************************************/
 
 #include "fsm.h"
-#include <linux/limits.h>
+#ifdef __linux__
+#include <linux/limits.h> // needed for PATH_MAX
+#else
+#include <limits.h>
+#endif
 #include <libgen.h>
 
 // SEARCH FOR Your Code Here FOR CODE INSERTION POINTS!

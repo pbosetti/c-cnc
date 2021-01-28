@@ -1,6 +1,10 @@
 #include "../ccnc.h"
 #include <machine.h>
+#ifdef __linux__
 #include <linux/limits.h> // needed for PATH_MAX
+#else
+#include <limits.h>
+#endif
 #include <libgen.h>       // needed for dirname() 
 
 
