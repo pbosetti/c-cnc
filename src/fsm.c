@@ -175,6 +175,8 @@ state_t do_load_block(state_data_t *data) {
   // process the block
   if (b == NULL) // reached the end of the program
     next_state = STATE_STOP;
+  if (b->length == 0) // length-zero block
+    next_state = STATE_NO_MOVE;
   else {
     fprintf(stderr, "> %s\n", b->line);
     switch (b->type) {

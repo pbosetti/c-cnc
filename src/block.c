@@ -192,6 +192,7 @@ block_t *block_new(char *line, block_t *prev, struct machine_config *cfg) {
   else { // this is the first block
     memset(b, 0, sizeof(block_t));
     b->prev = NULL; // redundant
+    b->type = NO_MOTION;
   }
 
   // fields that must be calculated
@@ -205,7 +206,7 @@ block_t *block_new(char *line, block_t *prev, struct machine_config *cfg) {
   b->line = malloc(strlen(line) + 1);
   strcpy(b->line, line);
   b->config = cfg;
-  b->type = NO_MOTION;
+  // b->type = NO_MOTION;
   return b;
 }
 
