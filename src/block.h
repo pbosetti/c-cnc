@@ -36,6 +36,8 @@ typedef struct block {
   data_t feedrate;       // Feedrate (mm/min)
   data_t spindle;        // Spindle rate (rpm)
   point_t target;        // Target position at the end of the block
+  point_t center;        // Arc center (relative to start)
+  data_t radius;         // Arc radius
   data_t length;         // Block length
   point_t delta;         // Block projections
   block_profile_t *prof; // Velocity profile

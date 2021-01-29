@@ -42,5 +42,6 @@ void program_reset(program_t *program);
 // print a program description
 void program_print(program_t *program, FILE *output);
 
+void program_plot(program_t *p, char const *file);
 
 #endif // end double inclusion guard

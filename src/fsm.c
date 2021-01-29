@@ -186,8 +186,8 @@ state_t do_load_block(state_data_t *data) {
         break;
       case ARC_CW:
       case ARC_CCW:
-        fprintf(stderr, "Arc interpolation not supported yet. Exiting\n");
-        next_state = STATE_STOP;
+        // fprintf(stderr, "Arc interpolation not supported yet. Exiting\n");
+        next_state = STATE_LINEAR_MOVE;
         break;
       case NO_MOTION:
         next_state = STATE_NO_MOVE;

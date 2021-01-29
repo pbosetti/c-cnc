@@ -18,7 +18,9 @@ file(GLOB LIB_SOURCES ${SOURCE_DIR}/*.c)
 
 include_directories(
   ${CMAKE_HOME_DIRECTORY}/machine/src
+  /usr/local/include
 )
+link_directories(/usr/local/lib)
 
 # TARGETS
 # static library containing everything in src
@@ -26,7 +28,7 @@ include_directories(
 #     second argument is the type of the library (STATIC of SHARED)
 #     third argument is a list of source files
 add_library(ccnclib STATIC ${LIB_SOURCES})
-target_link_libraries(ccnclib m machine)
+target_link_libraries(ccnclib m machine cairo)
 
 add_executable(ccnc ${SOURCE_DIR}/main/ccnc.c)
 target_link_libraries(ccnc ccnclib)
@@ -34,12 +36,15 @@ target_link_libraries(ccnc ccnclib)
 add_executable(commissioning ${SOURCE_DIR}/main/commissioning.c)
 target_link_libraries(commissioning ccnclib)
 
+add_executable(parse ${SOURCE_DIR}/main/parse.c)
+target_link_libraries(parse ccnclib)
+
 # INSTALL
 # First, set the base install folder: everything will be installed below this:
 set(CMAKE_INSTALL_PREFIX ${CMAKE_HOME_DIRECTORY})
 # Then define subfolders under CMAKE_INSTALL_PREFIX where to put executables
 #      and libraries
-install(TARGETS ccnc commissioning
+install(TARGETS ccnc commissioning parse
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib

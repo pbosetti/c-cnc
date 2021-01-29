@@ -1,7 +1,6 @@
-#include "block.h"
 #include <ctype.h>
 
-
+#include "block.h"
 //   ____       _            _
 //  |  _ \ _ __(_)_   ____ _| |_ ___
 //  | |_) | '__| \ \ / / _` | __/ _ \
@@ -24,39 +23,97 @@ static data_t quantize(data_t t, data_t tq, data_t *dq) {
 static int block_set_field(block_t *b, char cmd, char *arg) {
   assert(b);
   switch (cmd) {
-    case 'N':
-      b->n = atol(arg);
-      break;
-    case 'G':
-      b->type = atoi(arg);
-      break;
-    case 'X':
-      point_x(&b->target, atof(arg));
-      break;
-    case 'Y':
-      point_y(&b->target, atof(arg));
-      break;
-    case 'Z':
-      point_z(&b->target, atof(arg));
-      break;
-    case 'F':
-      b->feedrate = atof(arg);
-      break;
-    case 'S':
-      b->spindle = atof(arg);
-      break;
-    case 'T':
-      b->tool = atoi(arg);
-      break;
-    default:
-      fprintf(stderr, "ERROR: Unexpected G-code command %c%s\n", cmd, arg);
-      return EXIT_FAILURE;
-    }
+  case 'N':
+    b->n = atol(arg);
+    break;
+  case 'G':
+    b->type = atoi(arg);
+    break;
+  case 'X':
+    point_x(&b->target, atof(arg));
+    break;
+  case 'Y':
+    point_y(&b->target, atof(arg));
+    break;
+  case 'Z':
+    point_z(&b->target, atof(arg));
+    break;
+  case 'F':
+    b->feedrate = atof(arg);
+    break;
+  case 'S':
+    b->spindle = atof(arg);
+    break;
+  case 'T':
+    b->tool = atoi(arg);
+    break;
+  case 'I':
+    point_x(&b->center, atof(arg));
+    b->radius = 0; // reset radius
+    break;
+  case 'J':
+    point_y(&b->center, atof(arg));
+    b->radius = 0; // reset radius
+    break;
+  case 'R':
+    b->radius = atof(arg);
+    point_x(&b->center, 0); // reset center
+    point_y(&b->center, 0); // reset center
+    break;
+  default:
+    fprintf(stderr, "ERROR: Unexpected G-code command %c%s\n", cmd, arg);
+    return EXIT_FAILURE;
+  }
   return EXIT_SUCCESS;
 }
 
+// compute arc: if R is not zero, calculate center
+//              if R is zero, calculate it from center
+static void block_compute_arc(block_t *b) {
+  data_t af, at; // angles
+  data_t xt = b->target.x;
+  data_t xf = b->prev->target.x;
+  data_t yt = b->target.y;
+  data_t yf = b->prev->target.y;
+  if (b->radius == 0) {
+    b->radius = sqrt(pow(b->center.x, 2) + pow(b->center.y, 2));
+  }
+  else {
+    int cw = b->type == ARC_CW ? 1 : 0;
+    data_t d = sqrt(pow(xf-xt, 2) + pow(yf-yt, 2));
+    data_t l = d/2.0;
+    data_t h = sqrt(pow(b->radius,2)-pow(l,2));
+    int s = b->radius/fabs(b->radius) * (cw ? 1 : -1);
+    data_t x = l/d*(xt-xf)+s*h/d*(yt-yf)+xf;
+    data_t y = l/d*(yt-yf)-s*h/d*(xt-xf)+yf;
+    point_x(&b->center, x - b->prev->target.x);
+    point_y(&b->center, y - b->prev->target.y);
+  }
+  af = atan2(-b->center.y, -b->center.x);
+  if (af < 0) af += 2*M_PI;
+  at = atan2(b->target.y - b->prev->target.y - b->center.y, 
+             b->target.x - b->prev->target.x - b->center.x);
+  if (at < 0) at += 2*M_PI;
+  if (at == 0) at = 2*M_PI;
+  point_x(&b->delta, af);
+  point_y(&b->delta, at);
+  if (b->type == ARC_CCW) {
+    if ( b->radius > 0)
+      point_z(&b->delta, fabs(at - af));
+    else
+      point_z(&b->delta, 2*M_PI - fabs(at - af));
+  }
+  else {
+    if ( b->radius > 0)
+      point_z(&b->delta, 2*M_PI - fabs(at - af));
+    else
+      point_z(&b->delta, fabs(at - af)); 
+  }
+  b->length = b->delta.z * fabs(b->radius);
+}
+
 // compute velocity profile for the block
-static void block_compute(block_t *b) {
+static void block_compute_profile(block_t *b) {
   assert(b);
   data_t A, D, a, d;
   data_t dt, dt_1, dt_2, dt_m, dq;
@@ -150,14 +207,16 @@ block_t *block_new(char *line, block_t *prev, struct machine_config *cfg) {
 void block_free(block_t *block) {
   assert(block);
   // only block line and prof if they are not NULL
-  if (block->line) free(block->line);
-  if (block->prof) free(block->prof);
+  if (block->line)
+    free(block->line);
+  if (block->prof)
+    free(block->prof);
   free(block);
 }
 
 int block_parse(block_t *block) {
   assert(block);
-  char *line, *word, *to_free;
+  char *line, *word, *to_free, lone;
   point_t p0;
   int rv = EXIT_SUCCESS;
 
@@ -167,22 +226,46 @@ int block_parse(block_t *block) {
   to_free = line = strdup(block->line); // uses malloc internally
 
   // loop and split line into words
-  while ((word  = strsep(&line, " ")) != NULL) {
+  while ((word = strsep(&line, " ")) != NULL) {
+    if (word[0] == '#') // comment
+      break; 
+    if (strlen(word) == 0) // multiple spaces
+      continue;
+    if (strlen(word) == 1 && lone == '\0') { // lone command
+      lone = word[0];
+      continue;
+    }
     // parse each word
     // "x123.9" -> 'X', "123.9"
-    rv = block_set_field(block, toupper(word[0]), word + 1);
+    if (lone != 0) {
+      rv = block_set_field(block, toupper(lone), word);
+      lone = '\0';
+    }
+    else
+      rv = block_set_field(block, toupper(word[0]), word + 1);
   }
   free(to_free);
 
   // inherit from previous block
   p0 = point_zero(block);
   point_modal(&p0, &block->target);
-  point_delta(&p0, &block->target, &block->delta);
-  block->length = point_dist(&p0, &block->target);
+  switch (block->type) {
+  case LINE:
+  case RAPID:
+    point_delta(&p0, &block->target, &block->delta);
+    block->length = point_dist(&p0, &block->target);
+    break;
+  case ARC_CW:
+  case ARC_CCW:
+    block_compute_arc(block);
+    break;
+  default:
+    break;
+  }
 
   // compute the fields to be calculated
   if (block->type <= ARC_CCW) {
-    block_compute(block);
+    block_compute_profile(block);
   }
   return rv;
 }
@@ -223,14 +306,36 @@ data_t block_lambda(block_t *b, data_t t) {
 
 // interpolate axes positions at a given lambda value:
 // x(t) = x_0 + Dx * lambda(t)
-point_t  block_interpolate(block_t *b, data_t lambda) {
+point_t block_interpolate(block_t *b, data_t lambda) {
   assert(b);
   point_t result = point_new();
   point_t p0 = point_zero(b);
+  data_t da;
+  switch (b->type)
+  {
+  case LINE:
+    point_x(&result, p0.x + b->delta.x * lambda);
+    point_y(&result, p0.y + b->delta.y * lambda);
+    point_z(&result, p0.z + b->delta.z * lambda);
+    break;
 
-  point_x(&result, p0.x + b->delta.x * lambda);
-  point_y(&result, p0.y + b->delta.y * lambda);
-  point_z(&result, p0.z + b->delta.z * lambda);
+  case ARC_CCW:
+    da = b->delta.z;
+    point_x(&result, p0.x + b->center.x + fabs(b->radius)*cos(b->delta.x + da * lambda));
+    point_y(&result, p0.y + b->center.y + fabs(b->radius)*sin(b->delta.x + da * lambda));
+    point_z(&result, p0.z);
+    break;
+  
+  case ARC_CW:
+    da = b->delta.z;
+    point_x(&result, p0.x + b->center.x + fabs(b->radius)*cos(b->delta.x - da * lambda));
+    point_y(&result, p0.y + b->center.y + fabs(b->radius)*sin(b->delta.x - da * lambda));
+    point_z(&result, p0.z);
+    break;
+  
+  default:
+    break;
+  }
 
   return result;
 }
@@ -245,19 +350,20 @@ void block_print(block_t *b, FILE *out) {
   point_inspect(&b->target, &t);
   point_inspect(&p0, &p);
 
-  fprintf(out, "%03u: %s -> %s F%7.1f S%7.1f T%2u (%d)\n", b->n, p, t, b->feedrate, b->spindle, b->tool, b->type);
+  fprintf(out, "%03u: %s -> %s F%7.1f S%7.1f T%02u (%d)\n", b->n, p, t,
+          b->feedrate, b->spindle, b->tool, b->type);
+  fprintf(out, "  IJR[%8.3f %8.3f %8.3f] L%8.3f Delta[%8.3f %8.3f %8.3f]\n", b->center.x, b->center.y, b->radius, b->length, b->delta.x, b->delta.y, b->delta.z);
 
   // CRUCIAL!!! or you'll have memory leaks!
   free(t);
   free(p);
-
 }
 
 #ifdef BLOCK_MAIN
 int main() {
   block_t *b1, *b2;
   data_t t, lambda;
-  struct machine_config cfg = {.A = 10, .D=5, .tq=0.005};
+  struct machine_config cfg = {.A = 10, .D = 5, .tq = 0.005};
   point_t p = point_new();
   char *p_desc;
 
@@ -274,7 +380,6 @@ int main() {
     p = block_interpolate(b2, lambda);
     printf("%f %f %f %f %f\n", t, lambda, p.x, p.y, p.z);
   }
-
 
   block_free(b1);
   block_free(b2);

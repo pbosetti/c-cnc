@@ -8,9 +8,9 @@
     {
       "type": "lldb",
       "request": "launch",
-      "name": "program_test",
-      "program": "${workspaceFolder}/program_test",
-      "args": ["test.g"],
+      "name": "parse",
+      "program": "${workspaceFolder}/bin/parse",
+      "args": ["test2.g"],
       "cwd": "${workspaceFolder}/"
     },
     {
