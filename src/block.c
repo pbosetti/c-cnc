@@ -75,9 +75,11 @@ static void block_compute_arc(block_t *b) {
   data_t xf = b->prev->target.x;
   data_t yt = b->target.y;
   data_t yf = b->prev->target.y;
+  // calculate radius from center
   if (b->radius == 0) {
     b->radius = sqrt(pow(b->center.x, 2) + pow(b->center.y, 2));
   }
+  // calculate center from radius and extreme points
   else {
     int cw = b->type == ARC_CW ? 1 : 0;
     data_t d = sqrt(pow(xf-xt, 2) + pow(yf-yt, 2));
@@ -89,12 +91,14 @@ static void block_compute_arc(block_t *b) {
     point_x(&b->center, x - b->prev->target.x);
     point_y(&b->center, y - b->prev->target.y);
   }
+  // calculate initial and final angles
   af = atan2(-b->center.y, -b->center.x);
   if (af < 0) af += 2*M_PI;
   at = atan2(b->target.y - b->prev->target.y - b->center.y, 
              b->target.x - b->prev->target.x - b->center.x);
   if (at < 0) at += 2*M_PI;
   if (at == 0) at = 2*M_PI;
+  // use b->delta for storing initial angle, final angle, and arc
   point_x(&b->delta, af);
   point_y(&b->delta, at);
   if (b->type == ARC_CCW) {
@@ -105,11 +109,12 @@ static void block_compute_arc(block_t *b) {
   }
   else {
     if ( b->radius > 0)
-      point_z(&b->delta, 2*M_PI - fabs(at - af));
+      point_z(&b->delta, -(2*M_PI - fabs(at - af)));
     else
-      point_z(&b->delta, fabs(at - af)); 
+      point_z(&b->delta, -fabs(at - af)); 
   }
-  b->length = b->delta.z * fabs(b->radius);
+  // calculate arc length
+  b->length = fabs(b->delta.z * b->radius);
 }
 
 // compute velocity profile for the block
@@ -320,16 +325,10 @@ point_t block_interpolate(block_t *b, data_t lambda) {
     break;
 
   case ARC_CCW:
+  case ARC_CW:
     da = b->delta.z;
     point_x(&result, p0.x + b->center.x + fabs(b->radius)*cos(b->delta.x + da * lambda));
     point_y(&result, p0.y + b->center.y + fabs(b->radius)*sin(b->delta.x + da * lambda));
-    point_z(&result, p0.z);
-    break;
-  
-  case ARC_CW:
-    da = b->delta.z;
-    point_x(&result, p0.x + b->center.x + fabs(b->radius)*cos(b->delta.x - da * lambda));
-    point_y(&result, p0.y + b->center.y + fabs(b->radius)*sin(b->delta.x - da * lambda));
     point_z(&result, p0.z);
     break;
   
