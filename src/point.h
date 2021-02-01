@@ -32,12 +32,16 @@ void point_x(point_t *p, data_t val);
 void point_y(point_t *p, data_t val);
 void point_z(point_t *p, data_t val);
 void point_xyz(point_t *p, data_t x, data_t y, data_t z);
+int point_allset(point_t *p);
 
 // distance between two points
 data_t point_dist(point_t *p1, point_t *p2);
 
 // projections
 void point_delta(point_t *p1, point_t *p2, point_t *delta);
+
+// angle for three points
+data_t point_angle(point_t *p1, point_t *p2, point_t *p3);
 
 // modal behaviour:
 // copies values from p1 that are missing in p2

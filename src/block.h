@@ -34,6 +34,9 @@ typedef struct block {
   index_t n;             // Block number
   index_t tool;          // Tool number
   data_t feedrate;       // Feedrate (mm/min)
+  data_t angle;
+  data_t feedrate_in;
+  data_t feedrate_out;
   data_t spindle;        // Spindle rate (rpm)
   point_t target;        // Target position at the end of the block
   point_t center;        // Arc center (relative to start)

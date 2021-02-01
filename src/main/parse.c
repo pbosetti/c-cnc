@@ -52,19 +52,22 @@ int main (int argc, const char *argv[]) {
   program_plot(program, "plot.pdf");
 
   block_t *b = program->first;
-  point_t pos;
+  point_t pos, prev_pos = point_new();
+  point_xyz(&prev_pos, 0, 0, 0);
   data_t lambda;
-  data_t t = 0, ct = 0;
-  printf("%3s %7s %7s %9s %9s %9s %5s\n", "N", "T", "t", "X", "Y", "Z", "l");
+  data_t t = 0, ct = 0, f = 0;
+  printf("%3s %7s %7s %9s %9s %9s %5s %9s\n", "N", "T", "t", "X", "Y", "Z", "l", "f");
   do {
     t = 0;
     if (b->type == LINE || b->type == ARC_CW || b->type == ARC_CCW) {
       while (t <= b->prof->dt) {
         lambda = block_lambda(b, t);
         pos = block_interpolate(b, lambda);
-        printf("%03d %7.3f %7.3f %9.3f %9.3f %9.3f %5.3f\n", b->n, ct, t, pos.x, pos.y, pos.z, lambda);
+        f = point_dist(&prev_pos, &pos) / b->config->tq * 60;
+        printf("%03d %7.3f %7.3f %9.3f %9.3f %9.3f %5.3f %9.3f\n", b->n, ct, t, pos.x, pos.y, pos.z, lambda, f);
         t += b->config->tq;
         ct += b->config->tq;
+        memcpy(&prev_pos, &pos, sizeof(pos));
       }
     }
   } while ((b = b->next));

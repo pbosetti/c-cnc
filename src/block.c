@@ -9,6 +9,8 @@
 // Static, or private, functions
 // are only accessible from within this file
 
+#define is_arc(b) (b->type == ARC_CCW || b->type == ARC_CW)
+
 // quantize a time interval as a multiple of the sampling time
 // tq; put the difference in dq
 static data_t quantize(data_t t, data_t tq, data_t *dq) {
@@ -37,6 +39,7 @@ static int block_set_field(block_t *b, char cmd, char *arg) {
     break;
   case 'Z':
     point_z(&b->target, atof(arg));
+    point_z(&b->center, atof(arg));
     break;
   case 'F':
     b->feedrate = atof(arg);
@@ -123,10 +126,13 @@ static void block_compute_profile(block_t *b) {
   data_t A, D, a, d;
   data_t dt, dt_1, dt_2, dt_m, dq;
   data_t f_m, l;
+  data_t f_s, f_e;
 
   A = b->config->A;
   D = b->config->D;
   f_m = b->feedrate / 60.0;
+  f_s = b->feedrate_in / 60.0;
+  f_e = b->feedrate_out / 60.0;
   l = b->length;
   dt_1 = f_m / A;
   dt_2 = f_m / D;
@@ -171,6 +177,38 @@ static point_t point_zero(block_t *b) {
   return p0;
 }
 
+static data_t blocks_angle(block_t *b0, block_t *b1) {
+  data_t angle = M_PI;
+  point_t center = point_new();
+  if (b0 == NULL || 
+    b0->prev == NULL ||
+    !point_allset(&b0->target) || 
+    !point_allset(&b0->prev->target) ||
+    !point_allset(&b1->target)) 
+    return angle;
+  if (b0->length == 0 || b1->length == 0)
+    return angle;
+  // Calculate direction vectors
+  if (!is_arc(b0) && !is_arc(b1)) { // line-line
+    angle = M_PI - point_angle(&b0->prev->target, &b0->target, &b1->target);
+  }
+  else if (is_arc(b0) && !is_arc(b1)) { // arc-line
+    point_xyz(&center, b0->prev->target.x + b0->center.x, b0->prev->target.y + b0->center.y, b0->center.z);
+    angle = M_PI_2 - point_angle(&center, &b0->target, &b1->target);
+  }
+  else if (!is_arc(b0) && is_arc(b1)) { // line-arc
+    point_xyz(&center, b0->target.x + b1->center.x, b0->target.y + b1->center.y, b1->center.z);
+    angle = M_PI_2 - point_angle(&b0->prev->target, &b0->target, &center);
+  }
+  else { // arc-arc
+    point_t center0 = point_new();
+    point_xyz(&center, b0->target.x + b1->center.x, b0->target.y + b1->center.y, b0->center.z);
+    point_xyz(&center0, b0->prev->target.x + b0->center.x, b0->prev->target.y + b0->center.y, b0->center.z);
+    angle = M_PI - point_angle(&center0, &b0->target, &center);
+  }
+  return angle;
+}
+
 //   ____        _     _ _
 //  |  _ \ _   _| |__ | (_) ___
 //  | |_) | | | | '_ \| | |/ __|
@@ -199,6 +237,8 @@ block_t *block_new(char *line, block_t *prev, struct machine_config *cfg) {
   b->length = 0.0;
   b->target = point_new();
   b->delta = point_new();
+  b->feedrate_in = 0.0;
+  b->feedrate_out = 0.0;
   // allocate memory for referenced objects:
   b->prof = malloc(sizeof(block_profile_t));
   assert(b->prof);
@@ -255,9 +295,11 @@ int block_parse(block_t *block) {
   // inherit from previous block
   p0 = point_zero(block);
   point_modal(&p0, &block->target);
+
+  // compute the fields to be calculated
   switch (block->type) {
-  case LINE:
   case RAPID:
+  case LINE:
     point_delta(&p0, &block->target, &block->delta);
     block->length = point_dist(&p0, &block->target);
     break;
@@ -269,10 +311,25 @@ int block_parse(block_t *block) {
     break;
   }
 
-  // compute the fields to be calculated
+  if (block->prev && block->prev->type <= ARC_CCW) {
+    data_t factor;
+    // calculate initial and end feedrate (look-ahead)
+    // transition: median feedrate if aligned, zero if orthogonal (or more),
+    //             median * cos(2*angle)/2 in between.
+    block->angle = fabs(blocks_angle(block->prev, block));
+    factor = (cos(2 * block->angle) + 1) / 2.0;
+    factor = block->angle > M_PI_2 ? 0 : factor;
+    factor *= (block->prev->feedrate + block->feedrate) / 2.0;
+    block->feedrate_in = factor;
+    block->prev->feedrate_out = factor;
+
+    // compute the feedrate profile
+    block_compute_profile(block->prev);
+  }  
   if (block->type <= ARC_CCW) {
     block_compute_profile(block);
   }
+
   return rv;
 }
 
@@ -350,9 +407,10 @@ void block_print(block_t *b, FILE *out) {
   point_inspect(&b->target, &t);
   point_inspect(&p0, &p);
 
-  fprintf(out, "%03u: %s -> %s F%7.1f S%7.1f T%02u (%d)\n", b->n, p, t,
-          b->feedrate, b->spindle, b->tool, b->type);
-  fprintf(out, "  IJR[%8.3f %8.3f %8.3f] L%8.3f Delta[%8.3f %8.3f %8.3f]\n", b->center.x, b->center.y, b->radius, b->length, b->delta.x, b->delta.y, b->delta.z);
+  fprintf(out, "%03u: %s -> %s F%7.1f,%7.1f,%7.1f S%7.1f T%02u (%d)\n", 
+          b->n, p, t, b->feedrate_in,
+          b->feedrate, b->feedrate_out, b->spindle, b->tool, b->type);
+  fprintf(out, "  IJR[%8.3f %8.3f %8.3f] L%8.3f Delta[%8.3f %8.3f %8.3f] %6.3f\n", b->center.x, b->center.y, b->radius, b->length, b->delta.x, b->delta.y, b->delta.z, b->angle / M_PI * 180);
 
   // CRUCIAL!!! or you'll have memory leaks!
   free(t);

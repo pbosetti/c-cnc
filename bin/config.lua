@@ -5,7 +5,7 @@
 --  see http://support.motioneng.com/downloads-notes/tuning/pid_overshoot.htm
 machine = {}
 
-machine.cfg = {A=10, D=50, tq=0.005, error=0.05}
+machine.cfg = {A=100, D=120, tq=0.005, error=0.05}
 machine.cfg.zero = {0, 0, 400}
 
 machine.x = {mass=2000, res=50000}

@@ -60,6 +60,10 @@ void point_xyz(point_t *p, data_t x, data_t y, data_t z) {
   p->s |= ALL_SET;
 }
 
+int point_allset(point_t *p) {
+  return (p->s == ALL_SET);
+}
+
 data_t point_dist(point_t *p1, point_t *p2) {
   // ensure that p1 and p2 have all fields set
   assert(p1->s == ALL_SET && p2->s == ALL_SET);
@@ -78,6 +82,19 @@ void point_delta(point_t *p1, point_t *p2, point_t *delta) {
     p2->y - p1->y,
     p2->z - p1->z
   );
+}
+
+// angle betwee three points: 0 means they are aligned.
+data_t point_angle(point_t *p1, point_t *p2, point_t *p3) {
+  // angle is arccos( (p*q)/(|p| |q|)), where p and q are direction vectors
+  point_t p, q;
+  data_t np, nq, angle;
+  point_delta(p2, p1, &p);
+  point_delta(p2, p3, &q);
+  np = sqrt(pow(p.x, 2) + pow(p.y, 2) + pow(p.z, 2));
+  nq = sqrt(pow(q.x, 2) + pow(q.y, 2) + pow(q.z, 2));
+  angle = acos((p.x*q.x + p.y*q.y + p.z*q.z)/(np*nq));
+  return angle;
 }
 
 // BITMASK:

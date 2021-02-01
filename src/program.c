@@ -98,6 +98,7 @@ void program_plot(program_t *p, char const *file) {
   plot_page_init(pl, -100, -100, 600, 600);
   plot_set_rgbaw(pl, 0, 0, 0, 0.05, 2);
   plot_range(pl, -10, -10, 510, 510);
+  plot_grid(pl, 0, 0, 500, 500, 50);
   block_t *b = p->first;
   plot_set_rgbaw(pl, 0.7, 0, 0, 0.8, 2);
   plot_text_at(pl, label, 0, 0);
