@@ -60,8 +60,7 @@ int main (int argc, const char *argv[]) {
   do {
     t = 0;
     if (b->type == LINE || b->type == ARC_CW || b->type == ARC_CCW) {
-      while (t <= b->prof->dt) {
-        lambda = block_lambda(b, t);
+      while ((lambda = block_lambda(b, t)) < 1) {
         pos = block_interpolate(b, lambda);
         f = point_dist(&prev_pos, &pos) / b->config->tq * 60;
         printf("%03d %7.3f %7.3f %9.3f %9.3f %9.3f %5.3f %9.3f\n", b->n, ct, t, pos.x, pos.y, pos.z, lambda, f);

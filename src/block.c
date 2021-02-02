@@ -9,6 +9,7 @@
 // Static, or private, functions
 // are only accessible from within this file
 
+#define LAMBDA_SIZE 1.0E6
 #define is_arc(b) (b->type == ARC_CCW || b->type == ARC_CW)
 
 // quantize a time interval as a multiple of the sampling time
@@ -311,7 +312,10 @@ int block_parse(block_t *block) {
     break;
   }
 
-  if (block->prev && block->prev->type <= ARC_CCW) {
+  if (block->prev &&
+      block->type != RAPID &&
+      block->prev->type <= ARC_CCW && 
+      block->prev->type != RAPID) {
     data_t factor;
     // calculate initial and end feedrate (look-ahead)
     // transition: median feedrate if aligned, zero if orthogonal (or more),
@@ -323,10 +327,12 @@ int block_parse(block_t *block) {
     block->feedrate_in = factor;
     block->prev->feedrate_out = factor;
 
-    // compute the feedrate profile
+    // recompute the feedrate profile for previous block
     block_compute_profile(block->prev);
   }  
-  if (block->type <= ARC_CCW) {
+  if (block->type <= ARC_CCW && block->type != RAPID) {
+    // compute the feedrate profile for current block
+    block->feedrate_in = block->prev->feedrate_out;
     block_compute_profile(block);
   }
 
@@ -364,7 +370,10 @@ data_t block_lambda(block_t *b, data_t t) {
   else { // after ending time
     r = 1.0;
   }
-  return r;
+  
+  // round result to avoid rounding errors in comparison
+  // failing to do so would result in values slightly larger than 1
+  return round(r * LAMBDA_SIZE) / LAMBDA_SIZE;
 }
 
 // interpolate axes positions at a given lambda value:
