@@ -67,6 +67,12 @@ static void segment_points(segment_t *s, data_t a, data_t d, data_t f) {
   }
 }
 
+static void look_ahead_free_segments(look_ahead_t *lah) {
+  register index_t i = 0;
+  for (i = 0; i < lah->n_segments; i++)
+    free(lah->segments[i]);
+}
+
 //   ____        _     _ _
 //  |  _ \ _   _| |__ | (_) ___
 //  | |_) | | | | '_ \| | |/ __|
@@ -77,11 +83,14 @@ look_ahead_t *look_ahead_start(look_ahead_t *lah, block_t *start) {
   assert(start);
   if (lah == NULL) {
     lah = malloc(sizeof(look_ahead_t));
+    lah->segments = NULL;
+  }
+  else { // free all existing segments
+    look_ahead_free_segments(lah);
   }
   lah->start = start;
   lah->n_segments = 0;
   lah->n_blocks = 0;
-  lah->segments = NULL;
   return lah;
 }
 
@@ -223,9 +232,7 @@ void look_ahead_print(look_ahead_t *lah, FILE *dest) {
 
 void look_ahead_free(look_ahead_t *lah) {
   assert(lah);
-  register index_t i = 0;
-  for (i = 0; i < lah->n_segments; i++)
-    free(lah->segments[i]);
+  look_ahead_free_segments(lah);
   free(lah->segments);
   free(lah);
 }
@@ -293,13 +300,11 @@ int main() {
     block_t *b = lah->start;
     data_t s = 0.;
     look_ahead_update_blocks(lah);
-    fprintf(stderr, "%2s %8s %8s %8s %8s %8s\n", "b", "s", "fi", "fn", "fm", "fe");
+    fprintf(stderr, "\n%2s %8s %8s %8s %8s %8s\n", "b", "s", "fi", "fn", "fm", "fe");
     for (i = 0; i < lah->n_blocks; i++) {
       s += b->length;
-      fprintf(stderr, "%2d %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f\n", i, s, b->feedrate_in,
-              b->feedrate, b->feedrate_max, b->feedrate_out, 
-              b->prof->dt_1, b->prof->dt_m, b->prof->dt_2, 
-              b->prof->fs, b->prof->f, b->prof->fe);
+      fprintf(stderr, "%2d %8.3f %8.3f %8.3f %8.3f %8.3f\n", i, s, b->feedrate_in,
+              b->feedrate, b->feedrate_max, b->feedrate_out);
       b = b->next;
     }
   }
@@ -310,9 +315,9 @@ int main() {
     point_t point;
     printf("n t tt dt lambda x y z\n");
     do {
-      for (;t < b->prof->dt; t += cfg.tq) {
+      for (;t <= b->prof->dt; t += cfg.tq) {
         lambda = block_lambda(b, t);
-        if (lambda >= 1) break;
+        if (lambda > 1) break;
         point = block_interpolate(b, lambda);
         fprintf(stdout, "%2d %f %f %f %f %f %f %f\n", b->n, t, tt, b->prof->dt, block_lambda(b, t),  point.x, point.y, point.z);
         tt += cfg.tq;
@@ -321,8 +326,8 @@ int main() {
     } while ((b = b->next));
   }
 
-  // look_ahead_reset(lah);
-  // look_ahead_stop(lah, b4);
+  look_ahead_start(lah, b2);
+  look_ahead_stop(lah, b4);
 
   look_ahead_free(lah);
   return 0;

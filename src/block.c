@@ -122,73 +122,6 @@ static void block_compute_arc(block_t *b) {
 }
 
 // compute velocity profile for the block
-void block_compute_profile2(block_t *b) {
-  assert(b);
-  data_t A, D, a, d;
-  data_t dt, dt_1, dt_2, dt_m, dq;
-  data_t f_m, l;
-  data_t f_s, f_e;
-
-  A = b->config->A;
-  D = b->config->D;
-  f_m = b->feedrate / 60.0;
-  f_s = b->feedrate_in / 60.0;
-  f_e = b->feedrate_out / 60.0;
-  l = b->length;
-  dt_1 = fabs(f_m - f_s) / A;
-  dt_2 = fabs(f_m - f_e) / D;
-  dt_m = l / f_m - (dt_1 * (f_m + f_s) + dt_2 * (f_e + f_m)) / (2.0 * f_m);
-  if (dt_m > 0) { // trapezoidal velocity profile
-    dt = quantize(dt_1 + dt_2 + dt_m, b->config->tq, &dq);
-    dt_m += dq;
-    f_m = (2 * l - f_s * dt_1 - f_e * dt_2) / (dt_1 + dt_2 + 2 * dt_m);
-  }
-  else { // triangular velocity profile
-    dt_1 = (-(A*f_s) - D*f_s + sqrt((A + D)*(A*pow(f_e,2) + D*pow(f_s,2) + 2*A*D*l)))/(A*(A + D));
-    dt_2 = (-(A*f_e) - D*f_e + sqrt((A + D)*(A*pow(f_e,2) + D*pow(f_s,2) + 2*A*D*l)))/(D*(A + D));
-    if (dt_2 < 0) {
-      dt_2 = 0;
-      dt_1 = ((-f_s + sqrt(pow(f_s,2) + 2*A*l))/A);
-      dt = quantize(dt_1, b->config->tq, &dq);
-      dt_1 += dq;
-      f_m = f_s + A * dt_1;
-    }
-    if (dt_1 < 0) {
-      dt_1 = 0;
-      dt_2 = ((-f_e + sqrt(pow(f_e,2) + 2*D*l))/D);
-      dt = quantize(dt_2, b->config->tq, &dq);
-      dt_2 += dq;
-      f_m = f_e + D * dt_2;
-    }
-    else {
-      dt = quantize(dt_1 + dt_2, b->config->tq, &dq);
-      dt_2 += dq;
-      f_m = -((dt_2*f_e + dt_1*f_s - 2*l)/(dt_1 + dt_2));
-    }
-    dt_m = 0;
-  }
-
-  a = (f_m - f_s) / dt_1;
-  d = (f_e - f_m) / dt_2;
-  if (dt_1 <= __DBL_EPSILON__) { // catch up when dt_1 ~= 0 (inf)
-    a = A * fabs(f_m - f_s)/(f_m - f_s);
-  }
-  if (dt_2 <= __DBL_EPSILON__) {
-    d = -D * fabs(f_e - f_m)/(f_e - f_m);
-    f_e = f_m;
-    // b->feedrate_out = f_m * 60;
-  }
-
-  b->prof->dt_1 = dt_1;
-  b->prof->dt_m = dt_m;
-  b->prof->dt_2 = dt_2;
-  b->prof->a = a;
-  b->prof->d = d;
-  b->prof->f = f_m;
-  b->prof->dt = (b->type == RAPID ? 60 : dt);
-  b->prof->l = l;
-}
-
 void block_compute_profile(block_t *b) {
   assert(b);
   data_t A, D, a, d;
@@ -204,51 +137,84 @@ void block_compute_profile(block_t *b) {
   f_e = b->feedrate_out / 60.0;
   l = b->length;
 
-  fprintf(stderr, "block %d: ", b->n);
+  a = A, d = -D;
+  
+  // Some of the following conditionals could be condensed.
+  // They are INTENTIONALLY kept separate in order to enhance readability.
+
+  // initial and final speed less than feedrate: trapezoid or triangle
   if (f_m > f_s && f_m > f_e) {
-    fprintf(stderr, "trapezoid ");
     dt_1 = fabs(f_m - f_s) / A;
     dt_2 = fabs(f_m - f_e) / D;
-    if (f_m < f_n) {
+    if (f_m < f_n) { // can't reach feedrate: triangle
       dt_m = 0;
     }
-    else {
+    else { // trapezoid
       dt_m = l / f_m - (dt_1 * (f_m + f_s) + dt_2 * (f_e + f_m)) / (2.0 * f_m);
     }
+    // final speed zero:
+    // reshape TRAPEZOIDAL profile to end on tq multiple
+    if (f_e <= 0 && dt_m > 0) {
+      dt = quantize(dt_1 + dt_m + dt_2, b->config->tq, &dq);
+      dt_m -= dq;
+      dt_2 += 2*dq;
+      d = - f_m / dt_2;
+    }
+    // reshape TRIANGULAR profile to end on tq multiple
+    else if (f_e <= 0 && dt_m <= 0) {
+      dt = quantize(dt_1 + dt_2, b->config->tq, &dq);
+      dt_2 += dq;
+      f_m = -((dt_2*f_e + dt_1*f_s - 2*l)/(dt_1 + dt_2));
+      a = f_m / dt_1;
+      d = -f_m / dt_2;
+    }
+    else {
+      dt = dt_1 + dt_2 + dt_m;
+    }
   }
+  // initial speed equal to feedrate
   else if (f_m <= f_s && f_m > f_e) {
-    fprintf(stderr, "triangle left ");
     dt_1 = 0;
     dt_2 = fabs(f_m - f_e) / D;
     dt_m = l / f_m - dt_2 * (f_m+f_e)/(2*f_m);
+    // final speed zero: reshape profile to end on tq multiple
+    if (f_e <= 0) {
+      dt = quantize(dt_m + dt_2, b->config->tq, &dq);
+      dt_m -= dq;
+      dt_2 += 2*dq;
+      d = - f_m / dt_2;
+    }
+    else {
+      dt = dt_2 + dt_m;
+    }
   }
+  // final speed equal to feedrate
   else if (f_m > f_s && f_m <= f_e) {
-    fprintf(stderr, "triangle right ");
     dt_1 = fabs(f_m - f_s) / A;
     dt_2 = 0;
     dt_m = l / f_m - dt_1 * (f_m+f_s)/(2*f_m);
+    dt = dt_1 + dt_m;
   }
+  // constant speed
   else {
-    fprintf(stderr, "constant ");
     dt_1 = 0;
     dt_2 = 0;
     dt_m = l / f_m;
+    dt = dt_m;
   }
-  dt = dt_1 + dt_2 + dt_m;
-  fprintf(stderr, "%f %f %f %f\n", dt_1, dt_m, dt_2, dt);
-
+  
+  // set back  values into profile structure:
   b->prof->dt_1 = dt_1;
   b->prof->dt_m = dt_m;
   b->prof->dt_2 = dt_2;
   b->prof->a = a;
-  b->prof->d = -D;
+  b->prof->d = d;
   b->prof->f = f_m;
   b->prof->fs = f_s;
   b->prof->fe = f_e;
   b->prof->dt = (b->type == RAPID ? 60 : dt);
   b->prof->l = l;
 }
-
 
 // returns a valid point for the previous block: origin if the previous
 // block is undefined
