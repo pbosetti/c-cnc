@@ -23,7 +23,7 @@ typedef enum {
 
 typedef struct {
   data_t a, d;             // aceleration and deceleration
-  data_t f, l;             // feedrate and length
+  data_t f, fs, fe, l;     // feedrate and length
   data_t dt_1, dt_m, dt_2; // times
   data_t dt;               // timestep
 } block_profile_t;
@@ -37,6 +37,7 @@ typedef struct block {
   data_t angle;
   data_t feedrate_in;
   data_t feedrate_out;
+  data_t feedrate_max;
   data_t spindle;        // Spindle rate (rpm)
   point_t target;        // Target position at the end of the block
   point_t center;        // Arc center (relative to start)
@@ -66,6 +67,12 @@ void block_free(block_t *block);
 
 // parse the g-code line and fill the block fields
 int block_parse(block_t *block);
+
+void block_compute_profile(block_t *b);
+
+// compute velocity profile for the block
+void block_compute_profile(block_t *b);
+void block_compute_profile2(block_t *b);
 
 // evaluate lambda function at a given time
 data_t block_lambda(block_t *block, data_t time);

@@ -122,7 +122,7 @@ static void block_compute_arc(block_t *b) {
 }
 
 // compute velocity profile for the block
-static void block_compute_profile(block_t *b) {
+void block_compute_profile2(block_t *b) {
   assert(b);
   data_t A, D, a, d;
   data_t dt, dt_1, dt_2, dt_m, dq;
@@ -135,24 +135,49 @@ static void block_compute_profile(block_t *b) {
   f_s = b->feedrate_in / 60.0;
   f_e = b->feedrate_out / 60.0;
   l = b->length;
-  dt_1 = f_m / A;
-  dt_2 = f_m / D;
-  dt_m = l / f_m - (dt_1 + dt_2) / 2.0;
+  dt_1 = fabs(f_m - f_s) / A;
+  dt_2 = fabs(f_m - f_e) / D;
+  dt_m = l / f_m - (dt_1 * (f_m + f_s) + dt_2 * (f_e + f_m)) / (2.0 * f_m);
   if (dt_m > 0) { // trapezoidal velocity profile
     dt = quantize(dt_1 + dt_2 + dt_m, b->config->tq, &dq);
     dt_m += dq;
-    f_m = (2 * l) / (dt_1 + dt_2 + 2 * dt_m);
+    f_m = (2 * l - f_s * dt_1 - f_e * dt_2) / (dt_1 + dt_2 + 2 * dt_m);
   }
   else { // triangular velocity profile
-    dt_1 = sqrt(2 * l / (A + pow(A, 2) / D));
-    dt_2 = dt_1 * A / D;
-    dt = quantize(dt_1 + dt_2, b->config->tq, &dq);
+    dt_1 = (-(A*f_s) - D*f_s + sqrt((A + D)*(A*pow(f_e,2) + D*pow(f_s,2) + 2*A*D*l)))/(A*(A + D));
+    dt_2 = (-(A*f_e) - D*f_e + sqrt((A + D)*(A*pow(f_e,2) + D*pow(f_s,2) + 2*A*D*l)))/(D*(A + D));
+    if (dt_2 < 0) {
+      dt_2 = 0;
+      dt_1 = ((-f_s + sqrt(pow(f_s,2) + 2*A*l))/A);
+      dt = quantize(dt_1, b->config->tq, &dq);
+      dt_1 += dq;
+      f_m = f_s + A * dt_1;
+    }
+    if (dt_1 < 0) {
+      dt_1 = 0;
+      dt_2 = ((-f_e + sqrt(pow(f_e,2) + 2*D*l))/D);
+      dt = quantize(dt_2, b->config->tq, &dq);
+      dt_2 += dq;
+      f_m = f_e + D * dt_2;
+    }
+    else {
+      dt = quantize(dt_1 + dt_2, b->config->tq, &dq);
+      dt_2 += dq;
+      f_m = -((dt_2*f_e + dt_1*f_s - 2*l)/(dt_1 + dt_2));
+    }
     dt_m = 0;
-    dt_2 += dq;
-    f_m = 2 * l / (dt_1 + dt_2);
   }
-  a = f_m / dt_1;
-  d = -(f_m / dt_2);
+
+  a = (f_m - f_s) / dt_1;
+  d = (f_e - f_m) / dt_2;
+  if (dt_1 <= __DBL_EPSILON__) { // catch up when dt_1 ~= 0 (inf)
+    a = A * fabs(f_m - f_s)/(f_m - f_s);
+  }
+  if (dt_2 <= __DBL_EPSILON__) {
+    d = -D * fabs(f_e - f_m)/(f_e - f_m);
+    f_e = f_m;
+    // b->feedrate_out = f_m * 60;
+  }
 
   b->prof->dt_1 = dt_1;
   b->prof->dt_m = dt_m;
@@ -163,6 +188,67 @@ static void block_compute_profile(block_t *b) {
   b->prof->dt = (b->type == RAPID ? 60 : dt);
   b->prof->l = l;
 }
+
+void block_compute_profile(block_t *b) {
+  assert(b);
+  data_t A, D, a, d;
+  data_t dt, dt_1, dt_2, dt_m, dq;
+  data_t f_n, f_m, l;
+  data_t f_s, f_e;
+
+  A = b->config->A;
+  D = b->config->D;
+  f_n = b->feedrate / 60.0;
+  f_m = b->feedrate_max / 60;
+  f_s = b->feedrate_in / 60.0;
+  f_e = b->feedrate_out / 60.0;
+  l = b->length;
+
+  fprintf(stderr, "block %d: ", b->n);
+  if (f_m > f_s && f_m > f_e) {
+    fprintf(stderr, "trapezoid ");
+    dt_1 = fabs(f_m - f_s) / A;
+    dt_2 = fabs(f_m - f_e) / D;
+    if (f_m < f_n) {
+      dt_m = 0;
+    }
+    else {
+      dt_m = l / f_m - (dt_1 * (f_m + f_s) + dt_2 * (f_e + f_m)) / (2.0 * f_m);
+    }
+  }
+  else if (f_m <= f_s && f_m > f_e) {
+    fprintf(stderr, "triangle left ");
+    dt_1 = 0;
+    dt_2 = fabs(f_m - f_e) / D;
+    dt_m = l / f_m - dt_2 * (f_m+f_e)/(2*f_m);
+  }
+  else if (f_m > f_s && f_m <= f_e) {
+    fprintf(stderr, "triangle right ");
+    dt_1 = fabs(f_m - f_s) / A;
+    dt_2 = 0;
+    dt_m = l / f_m - dt_1 * (f_m+f_s)/(2*f_m);
+  }
+  else {
+    fprintf(stderr, "constant ");
+    dt_1 = 0;
+    dt_2 = 0;
+    dt_m = l / f_m;
+  }
+  dt = dt_1 + dt_2 + dt_m;
+  fprintf(stderr, "%f %f %f %f\n", dt_1, dt_m, dt_2, dt);
+
+  b->prof->dt_1 = dt_1;
+  b->prof->dt_m = dt_m;
+  b->prof->dt_2 = dt_2;
+  b->prof->a = a;
+  b->prof->d = -D;
+  b->prof->f = f_m;
+  b->prof->fs = f_s;
+  b->prof->fe = f_e;
+  b->prof->dt = (b->type == RAPID ? 60 : dt);
+  b->prof->l = l;
+}
+
 
 // returns a valid point for the previous block: origin if the previous
 // block is undefined
@@ -312,29 +398,8 @@ int block_parse(block_t *block) {
     break;
   }
 
-  if (block->prev &&
-      block->type != RAPID &&
-      block->prev->type <= ARC_CCW && 
-      block->prev->type != RAPID) {
-    data_t factor;
-    // calculate initial and end feedrate (look-ahead)
-    // transition: median feedrate if aligned, zero if orthogonal (or more),
-    //             median * cos(2*angle)/2 in between.
-    block->angle = fabs(blocks_angle(block->prev, block));
-    factor = (cos(2 * block->angle) + 1) / 2.0;
-    factor = block->angle > M_PI_2 ? 0 : factor;
-    factor *= (block->prev->feedrate + block->feedrate) / 2.0;
-    block->feedrate_in = factor;
-    block->prev->feedrate_out = factor;
-
-    // recompute the feedrate profile for previous block
-    block_compute_profile(block->prev);
-  }  
-  if (block->type <= ARC_CCW && block->type != RAPID) {
-    // compute the feedrate profile for current block
-    block->feedrate_in = block->prev->feedrate_out;
-    block_compute_profile(block);
-  }
+  block->angle = fabs(blocks_angle(block->prev, block));
+  block_compute_profile(block);
 
   return rv;
 }
@@ -348,25 +413,45 @@ data_t block_lambda(block_t *b, data_t t) {
   data_t a = b->prof->a;
   data_t d = b->prof->d;
   data_t f = b->prof->f;
+  data_t fs = b->prof->fs;
+  data_t fe = b->prof->fe;
   data_t r;
 
+  if (b->n == 200) { 
+    int a = 1;
+  }
   if (t < 0) { // negative time
     r = 0.0;
   }
   else if (t < dt_1) { // acceleration
-    r = a * pow(t, 2) / 2.0;
+    r = a * pow(t, 2) / 2.0 + fs * t;
     r /= b->prof->l;
   }
   else if (t < (dt_1 + dt_m)) { // maintenance
-    r = f * (dt_1 / 2.0 + (t - dt_1));
+    t -= dt_1;
+    r = a * pow(dt_1, 2) / 2 + fs * dt_1 + f * t;
     r /= b->prof->l;
   }
   else if (t < (dt_1 + dt_m + dt_2)) { // deceleration
-    data_t t_2 = dt_1 + dt_m;
-    r = f * dt_1 / 2.0 + f * (dt_m + t - t_2) +
-        d / 2.0 * (pow(t, 2) + pow(t_2, 2)) - d * t * t_2;
+    t -= dt_1 + dt_m;
+    r = a * pow(dt_1, 2) / 2 + fs * dt_1 + f * dt_m;
+    r += (f * t + d * pow(t, 2) / 2.0);
     r /= b->prof->l;
   }
+  // else if (t < dt_1) { // acceleration
+  //   r = a * pow(t, 2) / 2.0;
+  //   r /= b->prof->l;
+  // }
+  // else if (t < (dt_1 + dt_m)) { // maintenance
+  //   r = f * (dt_1 / 2.0 + (t - dt_1));
+  //   r /= b->prof->l;
+  // }
+  // else if (t < (dt_1 + dt_m + dt_2)) { // deceleration
+  //   data_t t_2 = dt_1 + dt_m;
+  //   r = f * dt_1 / 2.0 + f * (dt_m + t - t_2) +
+  //       d / 2.0 * (pow(t, 2) + pow(t_2, 2)) - d * t * t_2;
+  //   r /= b->prof->l;
+  // }
   else { // after ending time
     r = 1.0;
   }
