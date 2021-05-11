@@ -14,6 +14,8 @@ look_ahead_t *look_ahead_start(look_ahead_t *profile, block_t *start);
 // stop the profile and do the calculations
 void look_ahead_stop(look_ahead_t *profile, block_t *stop);
 
+int look_ahead_is_open(look_ahead_t *lah);
+
 // calculate again speed profiles of blocks in current segment
 void look_ahead_update_blocks(look_ahead_t *lah);
 

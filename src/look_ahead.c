@@ -89,6 +89,7 @@ look_ahead_t *look_ahead_start(look_ahead_t *lah, block_t *start) {
     look_ahead_free_segments(lah);
   }
   lah->start = start;
+  lah->stop  = NULL;
   lah->n_segments = 0;
   lah->n_blocks = 0;
   return lah;
@@ -105,6 +106,10 @@ void look_ahead_stop(look_ahead_t *lah, block_t *stop) {
   data_t real_speed; // max speed attainable from beginning of segment
   data_t next_speed; // nominal speed at the end of block
   int brk = 0;       // flag
+
+  // do not execute twice
+  if (!look_ahead_is_open(lah))
+    return;
 
   // set current block as closing one
   lah->stop = stop;
@@ -176,6 +181,10 @@ void look_ahead_stop(look_ahead_t *lah, block_t *stop) {
   lah->segments[j]->sf = s;
   segment_points(lah->segments[j], A, D, f0);
   lah->n_segments = j + 1;
+}
+
+int look_ahead_is_open(look_ahead_t *lah) {
+  return lah && lah->stop == NULL;
 }
 
 void look_ahead_update_blocks(look_ahead_t *lah) {

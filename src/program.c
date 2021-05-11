@@ -1,6 +1,7 @@
 // program.c
 
 #include "program.h"
+#include "look_ahead.h"
 #include "plot.h"
 
 program_t *program_new(const char *filename) {
@@ -40,7 +41,7 @@ int program_parse(program_t *p, struct machine_config *cfg) {
   char *line = NULL;
   ssize_t line_len = 0;
   size_t n = 0;
-
+  look_ahead_t *lah = NULL;
   block_t *b;
 
   p->file = fopen(p->filename, "r");
@@ -60,6 +61,25 @@ int program_parse(program_t *p, struct machine_config *cfg) {
     }
     if (p->first == NULL) p->first = b;
     p->last = b;
+
+    // LOOK-AHEAD LOGIC:
+    // start new lookahead profile when:
+    // - first interpolation block
+    // - interpolation block and lookahead not started
+    // stop lookahead profile at the end of previous block when;
+    // - interpolation with angle > 45°
+    // - not an interpolation motion
+    if (b->type == LINE || b->type == ARC_CW || b->type == ARC_CCW) {
+      if (lah == NULL || !look_ahead_is_open(lah)) {
+        lah = look_ahead_start(lah, b);
+      }
+      else if (b->prev && b->angle > M_PI/2) {
+        look_ahead_stop(lah, b->prev);
+      }
+    }
+    else {
+      look_ahead_stop(lah, b->prev);
+    }
     p->n++;
   }
   fclose(p->file);
