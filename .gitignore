@@ -7,3 +7,4 @@ build
 /bin/*
 !/bin/*.lua
 /lib/*
+.vscode

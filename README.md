@@ -8,6 +8,7 @@ course, Department of Industrial Engineering, University of Trento.
 * `examples`: contains introductory code examples
 * `src`: contains the main project source code (library files)
 *  `src/main`: contains executables code
+*  `goodies`: useful stuff
 
 ## Build with Cmake
 
