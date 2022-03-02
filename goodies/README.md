@@ -6,7 +6,7 @@ This forder contains useful stuff.
 
 This is an enhanced keyboard map for italian keyboards that adds two shortcuts for characters that are often sed in programming and on linux: tilda `~` and backtick `.
 
-Those characters are mapped to AltGR + ' and AltGr + ì, respectively.
+Those characters are mapped to `AltGR` + `'` and `AltGr` + `ì`, respectively.
 
 **NOTE: this is only needed if you have a physical italian keyboard**
 
