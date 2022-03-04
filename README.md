@@ -43,6 +43,8 @@ sudo gem install gv_fsm
 code --install-extension xaver.clang-format
 code --install-extension tintinweb.graphviz-interactive-preview
 code --install-extension canna.figlet
+sudo update-alternatives --set c++ /usr/bin/clang++
+sudo update-alternatives --set cc /usr/bin/clang
 ```
 
 
