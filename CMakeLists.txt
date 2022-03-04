@@ -79,7 +79,7 @@ set(SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/src)
 file(GLOB LIB_SOURCES_CPP "${SOURCE_DIR}/*.cpp")
 set_source_files_properties(${LIB_SOURCES_CPP} PROPERTIES COMPILE_OPTIONS -std=c++14)
 file(GLOB LIB_SOURCES "${SOURCE_DIR}/*.c")
-set_source_files_properties(${LIB_SOURCES} PROPERTIES COMPILE_OPTIONS -std=gnu11)
+set_source_files_properties(${LIB_SOURCES} PROPERTIES COMPILE_OPTIONS -std=c11)
 # generate defines.h, which also contains version numbers matching git tags
 configure_file(
   ${SOURCE_DIR}/defines.h.in

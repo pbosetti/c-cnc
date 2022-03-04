@@ -38,7 +38,7 @@ I suggest to congugure VS Code with the following settings. Open the settings fi
 The project must be built with a linux toolchain. On Windows, we are using a WSL2 environment with Ubuntu OS. To enable the compilation we need to install a few packages: on the linux console, type:
 
 ```bash
-sudo apt install build-essential make cmake clang clang-format lldb libzmq3-dev ruby figlet
+sudo apt install build-essential make cmake cmake-curses-gui clang clang-format lldb libzmq3-dev ruby figlet
 sudo gem install gv_fsm
 code --install-extension xaver.clang-format
 code --install-extension tintinweb.graphviz-interactive-preview
