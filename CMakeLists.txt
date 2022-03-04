@@ -159,7 +159,7 @@ if(NATIVE)
   endif()
   set(TARGET_NAME CACHE STRING "Select TARGET platform")
   if(NOT TARGET_NAME)
-    set(TARGET_NAME "armv7")
+    set(TARGET_NAME "armv7a")
   endif()
   set_property(CACHE TARGET_NAME PROPERTY STRINGS mipsel armv6 armv7 armv7a arm64)
   configure_file(
