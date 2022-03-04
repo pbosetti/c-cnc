@@ -10,7 +10,6 @@ cmake_minimum_required(VERSION 3.10)
 #                                                   |___/ 
 set(VERSION "1.0")
 project(C-CNC VERSION ${VERSION} LANGUAGES C CXX)
-message(STATUS "CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
 
 #    _____                           _____                      
 #   / ____|                         / ____|                     
@@ -56,6 +55,15 @@ elseif(APPLE)
   include_directories(/usr/local/include)
   link_directories(/usr/local/lib)
 endif()
+
+if(NOT CMAKE_BUILD_TYPE)
+  if(NATIVE)
+    set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Native targets default to Debug" FORCE)
+  else()
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Cross-build default to Release" FORCE)
+  endif()
+endif(NOT CMAKE_BUILD_TYPE)
+message(STATUS "CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
 
 # COMPILE OPTIONS
 add_compile_options(-fPIC -D_GNU_SOURCE)
