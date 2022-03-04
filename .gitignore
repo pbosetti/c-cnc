@@ -4,7 +4,13 @@
 !/examples/*.md
 !/examples/src
 build
+xbuild
+/src/defines.h
+Dockerfile
+/arm*
 /bin/*
-!/bin/*.lua
 /lib/*
 .vscode
+
+/products*/*
+!/products*/.gitkeep
