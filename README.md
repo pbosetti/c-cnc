@@ -37,7 +37,7 @@ I suggest to congugure VS Code with the following settings. Open the settings fi
 }
 ```
 
-It there are already other items in the JSON file, just add (don't replace) the obove ones.
+It there are already other items in the JSON file, just add (don't replace) the above ones.
 
 ## Prerequisites
 
@@ -81,7 +81,7 @@ large projects.
 the products in the install folder just call `make install` (i.e. there is no
 need for calling `make` and then `make install`)
 
-For brevity sake, after having configured the project for the first time, in the following you can do everithing with one single command: `cmake --build build -t install`: this is doing, in sequence, step 1 (only if the CMakeLists.txt file has changed), then step 2 (only if sources have changed), then step 3.
+For brevity sake, after having configured the project for the first time, in the following you can do everithing with one single command: `cmake --build build -t install`: this is doing, in sequence, step 1 (only if the `CMakeLists.txt` file has changed), then step 2 (only if sources have changed), then step 3.
 
 ## Other projects
 
