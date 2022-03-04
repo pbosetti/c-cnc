@@ -58,7 +58,7 @@ elseif(APPLE)
 endif()
 
 # COMPILE OPTIONS
-add_compile_options(-std=gnu11 -fPIC -D_GNU_SOURCE)
+add_compile_options(-fPIC -D_GNU_SOURCE)
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
   message(STATUS "Debug mode, enabling all warnings")
   add_compile_options(-Wall -Wno-comment)
