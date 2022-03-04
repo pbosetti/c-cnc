@@ -1,8 +1,8 @@
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
 #include "../defines.h"
 #include "../inic.h"
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 int main(int argc, char const *argv[]) {
   char *name = malloc(1024);

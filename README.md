@@ -30,8 +30,14 @@ I suggest to congugure VS Code with the following settings. Open the settings fi
   "editor.wordWrapColumn": 80,
   "editor.rulers": [80],
   "editor.renderLineHighlight": "all",
+  "cmake.configureOnEdit": false,
+  "cmake.configureOnOpen": false,
+  "C_Cpp.default.cppStandard": "c++17",
+  "C_Cpp.default.cStandard": "c17",
 }
 ```
+
+It there are already other items in the JSON file, just add (don't replace) the obove ones.
 
 ## Prerequisites
 
