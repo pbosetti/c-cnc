@@ -42,6 +42,7 @@
  * @ingroup server
  */
 
+#include <stdint.h>
 #include "defines.h"
 
 
