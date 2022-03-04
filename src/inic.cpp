@@ -21,7 +21,7 @@ using namespace std;
 
 #define ini_get(t) \
 declare_ini_get(t) { \
-  t v; \
+  t v = 0; \
   inipp::Ini<char> *ini = static_cast<inipp::Ini<char> *>(ini_p); \
   bool r = inipp::extract(ini->sections[section][field], v); \
   *val = v; \
@@ -48,10 +48,10 @@ ini_get(uint64_t);
 ini_get(uint32_t);
 ini_get(long);
 
-int ini_get_char(void *ini_p, const char *section, const char *field, char *val) {
+int ini_get_char(void *ini_p, const char *section, const char *field, char *val, size_t len) {
   string str;
   inipp::Ini<char> *ini = static_cast<inipp::Ini<char> *>(ini_p);
   bool r = inipp::extract(ini->sections[section][field], str);
-  strcpy(val, str.c_str());
+  strncpy(val, str.c_str(), len);
   return r ? 1 : 0;
 }

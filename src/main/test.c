@@ -4,12 +4,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define BUFLEN 1024
+
 int main(int argc, char const *argv[]) {
-  char *name = malloc(1024);
+  char *name = malloc(BUFLEN);
   int value;
   void *ini = ini_init("settings.ini");
 
-  ini_get_char(ini, "test", "name", name);
+  ini_get_char(ini, "test", "name", name, BUFLEN);
   ini_get_int(ini, "test", "value", &value);
 
   printf("Hello, world!\n");

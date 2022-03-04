@@ -72,9 +72,14 @@ declare_ini_get(int);
 declare_ini_get(double);
 
 /**
- * @brief Construct `ini_get_char(void *ini_p, char *section, char *field, char *val)`, which actually **gets a char array**.
+ * @brief **Gets a char array**.
+ * @param ini_p the ini object
+ * @param section the name of the ini section
+ * @param field the name of the desired field
+ * @param val the pointer to the destination char array
+ * @param len the size of the destination array (pre-allocated)
  */
-declare_ini_get(char);
+int ini_get_char(void *ini_p, const char *section, const char *field, char *val, size_t len);
 
 /**
  * @brief Construct `ini_get_uint64_t(void *ini_p, char *section, char *field, uint64_t *val)`
