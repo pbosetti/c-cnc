@@ -91,7 +91,7 @@ The cross-build system is taken from <https://github.com/pbosetti/xtemplate>.
 
 ## Author
 
-Paolo Bosetti (paolo dot bosetti at unitn dot it).
+Paolo Bosetti (`paolo dot bosetti at unitn dot it`).
 
 ## License
 

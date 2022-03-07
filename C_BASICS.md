@@ -2,7 +2,7 @@
 
 # Compilation
 
-Here is a list of the most commonly used switches of the `gcc` command for compiling simple programs (for more complex ones, use cmake and make):
+Here is a list of the most commonly used switches of the `clang` command for compiling simple programs (for more complex ones, use cmake and make):
 
 * `-o filename`: specify the name of the executable file to be created
 * `-g`: generate a debuggable executable
@@ -204,7 +204,9 @@ mystruct_t s2 = {5.0, 2.0};
 Note, though, that this direct assignment of multiple values in a list **only
 works on variable declaration**: you cannot directly assign a compound object
 after its declaration. Moreover, this direct assignment **does not work** if the
-compound type is declared as a pointer (e.g. `mystruct_t *s3`).   
+compound type is declared as a pointer (e.g. `mystruct_t *s3`).  
+
+A constant list or a constant string used in quick initialization is called a **literal** value.
 
 ## Where to define custom types and structures
 
