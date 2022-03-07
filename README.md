@@ -16,7 +16,7 @@ course, Department of Industrial Engineering, University of Trento.
 
 The development is carried out in Visual Studio Code (VS Code for brevity).
 
-I suggest to congugure VS Code with the following settings. Open the settings file: `Ctrl`+`Shift`+`p` then type `json` and select the item "Preferences: Open Settings (JSON)". Then be sure that the list contains the following items:
+I suggest to configure VS Code with the following settings. Open the settings file: `Ctrl`+`Shift`+`p` then type `json` and select the item "Preferences: Open Settings (JSON)". Then be sure that the list contains the following items:
 
 ```json
 {
@@ -37,7 +37,7 @@ I suggest to congugure VS Code with the following settings. Open the settings fi
 }
 ```
 
-It there are already other items in the JSON file, just add (don't replace) the above ones.
+It there are already other items in the JSON file, just add (don't replace) the above ones to the list (pay attention to separate each line with a comma and to put everithyng in between the outer curly braces).
 
 ## Prerequisites
 
@@ -57,7 +57,7 @@ sudo update-alternatives --set cc /usr/bin/clang
 ## Build with Cmake
 
 Building a project with Cmake is a two-step process. The first step is called
-*configuring*, and results in populating the `build` folder with all the
+*configuration*, and it results in populating the `build` folder with all the
 contents needed for the compilation. The second step is called *compilation* and
 results in the products of the build to be created in the root of the `build`
 folder. There is an optional third step, *install*, that copies the build
@@ -70,18 +70,20 @@ products into a destination folder. This project os configured to have the local
 4. (optional install) if you want to install the build products, type `make -C build install`: this copies binaries into the `bin` and `lib` folders of the root
 	project folder
 
-**Note**: the `cmake` command must be run the first time, and then every time
+**Note 1.**: the `cmake` command must be run the first time, and then every time
 that you create, move, or rename source files. Conversely, if you only change
 contents of source files, then you only need to `make`. The `make` command is
 smart enough not to recompile files that have been already compiled and that are
 unchanged from the previous build: this reduces a lot the compilation time for
 large projects.
 
-**Note**: the command `make install` also does the compilation **if needed**, so if you want
+**Note 2.**: the command `make` takes as optional argument the name of the _target_ to build, i.e. the list of products to be generated. A special target is `all`, so `make all` means "let's build everything". `all` is also the default target, so if you do simply `make`, then you are building everithing. Other useful targets are `clean` (for removing previously generated binaries) and `install` (for copying the binaries into the destination folder). The available targets are listed by the special target `help`: `make -Cbuild help`.
+
+**Note 3.**: the command `make install` also does the compilation **if needed**, so if you want
 the products in the install folder just call `make install` (i.e. there is no
 need for calling `make` and then `make install`)
 
-For brevity sake, after having configured the project for the first time, in the following you can do everithing with one single command: `cmake --build build -t install`: this is doing, in sequence, step 1 (only if the `CMakeLists.txt` file has changed), then step 2 (only if sources have changed), then step 3.
+For brevity sake, after having configured the project for the first time, in the following you can do everithing with one single command: `cmake --build build -t install`: this is doing, in sequence, step 1 (only if the `CMakeLists.txt` file has changed), then step 2 (only if sources have changed), then step 3. In the latter command, `--build` is an option that takes one argument, the build folder, which is named `build`; the second option, `-t`, takes as argument the name of the build _target_: by default it is `all` (meaning, "build all targets"), and thus `-t install` means "build the target ` install`" (which implies the target ` all`).
 
 ## Other projects
 
