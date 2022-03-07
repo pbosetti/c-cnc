@@ -83,7 +83,7 @@ large projects. The option `-Cbuild` (the space is optional) tells make to work 
 the products in the install folder just call `make install` (i.e. there is no
 need for calling `make` and then `make install`)
 
-For brevity sake, after having configured the project for the first time, in the following you can do everithing with one single command: `cmake --build build -t install`: this is doing, in sequence, step 1 (only if the `CMakeLists.txt` file has changed), then step 2 (only if sources have changed), then step 3. In the latter command, `--build` is an option that takes one argument, the build folder, which is named `build`; the second option, `-t`, takes as argument the name of the build _target_: by default it is `all` (meaning, "build all targets"), and thus `-t install` means "build the target ` install`" (which implies the target ` all`).
+For brevity sake, after having configured the project for the first time, in the following you can do everithing with one single command: `cmake --build build -t install`: this is doing, in sequence, step 1 (only if the `CMakeLists.txt` file has changed), then step 2 (only if sources have changed), then step 3. In the latter command, `--build` is an option that takes one argument, the build folder, which is named `build`; the second option, `-t`, takes as argument the name of the build _target_: by default it is `all` (meaning, "build all targets"), and thus `-t install` means "build the target ` install`" (which implies the target `all`).
 
 ## Other projects
 
