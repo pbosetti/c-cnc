@@ -75,7 +75,7 @@ that you create, move, or rename source files. Conversely, if you only change
 contents of source files, then you only need to `make`. The `make` command is
 smart enough not to recompile files that have been already compiled and that are
 unchanged from the previous build: this reduces a lot the compilation time for
-large projects.
+large projects. The option `-Cbuild` (the space is optional) tells make to work in the directory `build`.
 
 **Note 2.**: the command `make` takes as optional argument the name of the _target_ to build, i.e. the list of products to be generated. A special target is `all`, so `make all` means "let's build everything". `all` is also the default target, so if you do simply `make`, then you are building everithing. Other useful targets are `clean` (for removing previously generated binaries) and `install` (for copying the binaries into the destination folder). The available targets are listed by the special target `help`: `make -Cbuild help`.
 
