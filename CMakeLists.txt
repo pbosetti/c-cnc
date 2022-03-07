@@ -72,6 +72,13 @@ if(CMAKE_BUILD_TYPE MATCHES "Debug")
   add_compile_options(-Wall -Wno-comment)
 endif()
 
+# RPATH management
+if (APPLE)
+  set(CMAKE_INSTALL_RPATH "@executable_path/../lib")
+else()
+  set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
+endif()
+
 #   _____           _           _     _____       _        _ _     
 #  |  __ \         (_)         | |   |  __ \     | |      (_) |    
 #  | |__) | __ ___  _  ___  ___| |_  | |  | | ___| |_ __ _ _| |___ 
