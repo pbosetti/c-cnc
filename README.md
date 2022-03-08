@@ -1,7 +1,6 @@
 # C-CNC
 
-This is the repository of the code developed during the _Digital Manufacturing_
-course, Department of Industrial Engineering, University of Trento.
+This is the repository of the code developed during the _Digital Manufacturing_ course, Department of Industrial Engineering, University of Trento.
 
 ## Contents
 
@@ -56,32 +55,17 @@ sudo update-alternatives --set cc /usr/bin/clang
 
 ## Build with Cmake
 
-Building a project with Cmake is a two-step process. The first step is called
-*configuration*, and it results in populating the `build` folder with all the
-contents needed for the compilation. The second step is called *compilation* and
-results in the products of the build to be created in the root of the `build`
-folder. There is an optional third step, *install*, that copies the build
-products into a destination folder. This project os configured to have the local `bin` forder as destination.
+Building a project with Cmake is a two-step process. The first step is called *configuration*, and it results in populating the `build` folder with all the contents needed for the compilation. The second step is called *compilation* and results in the products of the build to be created in the root of the `build` folder. There is an optional third step, *install*, that copies the build products into a destination folder. This project os configured to have the local `bin` forder as destination.
 
-1. (configuring) from the terminal, be sure to be in the project's toot directory and then issue the command `cmake
-	-Bbuild .`: this means configure the project in the `build` directory, searching
-	for the `CMakeLists.txt` file in the current directory (that is `.`)
+1. (configuring) from the terminal, be sure to be in the project's toot directory and then issue the command `cmake	-Bbuild .`: this means configure the project in the `build` directory, searching for the `CMakeLists.txt` file in the current directory (that is `.`)
 3. (compilation) from the terminal, compile the project with the command `make -C build` 
-4. (optional install) if you want to install the build products, type `make -C build install`: this copies binaries into the `bin` and `lib` folders of the root
-	project folder
+4. (optional install) if you want to install the build products, type `make -C build install`: this copies binaries into the `bin` and `lib` folders of the root project folder
 
-**Note 1.**: the `cmake` command must be run the first time, and then every time
-that you create, move, or rename source files. Conversely, if you only change
-contents of source files, then you only need to `make`. The `make` command is
-smart enough not to recompile files that have been already compiled and that are
-unchanged from the previous build: this reduces a lot the compilation time for
-large projects. The option `-Cbuild` (the space is optional) tells make to work in the directory `build`.
+**Note 1.**: the `cmake` command must be run the first time, and then every time that you create, move, or rename source files. Conversely, if you only change contents of source files, then you only need to `make`. The `make` command is smart enough not to recompile files that have been already compiled and that are unchanged from the previous build: this reduces a lot the compilation time for large projects. The option `-Cbuild` (the space is optional) tells make to work in the directory `build`.
 
 **Note 2.**: the command `make` takes as optional argument the name of the _target_ to build, i.e. the list of products to be generated. A special target is `all`, so `make all` means "let's build everything". `all` is also the default target, so if you do simply `make`, then you are building everithing. Other useful targets are `clean` (for removing previously generated binaries) and `install` (for copying the binaries into the destination folder). The available targets are listed by the special target `help`: `make -Cbuild help`.
 
-**Note 3.**: the command `make install` also does the compilation **if needed**, so if you want
-the products in the install folder just call `make install` (i.e. there is no
-need for calling `make` and then `make install`)
+**Note 3.**: the command `make install` also does the compilation **if needed**, so if you want the products in the install folder just call `make install` (i.e. there is no need for calling `make` and then `make install`)
 
 For brevity sake, after having configured the project for the first time, in the following you can do everithing with one single command: `cmake --build build -t install`: this is doing, in sequence, step 1 (only if the `CMakeLists.txt` file has changed), then step 2 (only if sources have changed), then step 3. In the latter command, `--build` is an option that takes one argument, the build folder, which is named `build`; the second option, `-t`, takes as argument the name of the build _target_: by default it is `all` (meaning, "build all targets"), and thus `-t install` means "build the target ` install`" (which implies the target `all`).
 
