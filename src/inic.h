@@ -1,11 +1,4 @@
 /******************************************************************************\
-    _    _   _ _   _    _    
-   / \  | \ | | \ | |  / \   
-  / _ \ |  \| |  \| | / _ \  
- / ___ \| |\  | |\  |/ ___ \ 
-/_/   \_\_| \_|_| \_/_/   \_\
-                             
-==============================================================================
  File:         inic.h
  Timestamp:    2020-Jun-01
  Author:       Paolo Bosetti <paolo.bosetti@unitn.it>
@@ -19,7 +12,7 @@
  * @brief C wrapper to the `inipp.h` header-only library for managing INI files.
  * 
  * This is a C-wrapper to the `inipp.h` C++ library. The original library
- * is well apped to the flexibility of C++, simplifying the management
+ * is well apted to the flexibility of C++, simplifying the management
  * of different value types. In C, this is performed by a set of macros for 
  * creating type-mapped functions:
  * - in the header, the macro `declare_ini_get(type)` declares the function 
