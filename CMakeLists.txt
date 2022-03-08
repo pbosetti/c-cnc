@@ -102,18 +102,18 @@ configure_file(
 )
 
 # TARGETS
-add_executable(test ${SOURCE_DIR}/main/test.c)
+add_executable(ini_test ${SOURCE_DIR}/main/ini_test.c)
 
 list(APPEND TARGETS_LIST
-  test
+  ini_test
 )
 
 if(IS_ARM)
   add_library(${PROJECT_NAME}_static STATIC ${LIB_SOURCES} ${LIB_SOURCES_CPP})
-  target_link_libraries(test ${PROJECT_NAME}_static)
+  target_link_libraries(ini_test ${PROJECT_NAME}_static)
 else()
   add_library(${PROJECT_NAME}_shared SHARED ${LIB_SOURCES} ${LIB_SOURCES_CPP})
-  target_link_libraries(test ${PROJECT_NAME}_shared)
+  target_link_libraries(ini_test ${PROJECT_NAME}_shared)
   list(APPEND TARGETS_LIST ${PROJECT_NAME}_shared)
 endif()
 
