@@ -85,6 +85,14 @@ need for calling `make` and then `make install`)
 
 For brevity sake, after having configured the project for the first time, in the following you can do everithing with one single command: `cmake --build build -t install`: this is doing, in sequence, step 1 (only if the `CMakeLists.txt` file has changed), then step 2 (only if sources have changed), then step 3. In the latter command, `--build` is an option that takes one argument, the build folder, which is named `build`; the second option, `-t`, takes as argument the name of the build _target_: by default it is `all` (meaning, "build all targets"), and thus `-t install` means "build the target ` install`" (which implies the target `all`).
 
+## Execute the compiled binaries
+
+The command `cmake --build build` compiles the binary executables under `build`. Those binaries are compiled with minimum optimizations and contain the debug symbols, i.e. they are suitable for debugging. From the project root directory, they can be run as `build/ini_test` (for example).
+
+The command `cmake --build build -t install` (or `cmake --install build`) also installs optimized versions under `products_host`: executables go under `bin` and libraries under `lib`. These files are speed-optimized and **cannot be debugged**. From the project root directory they can be run as `products_host/bin/ini_test`.
+
+You are suggested to run `export PATH=$PATH:$PWD/products_host/bin` once per session, so that you can simply run a program by typing its name (e.g. `ini_test`).
+
 ## Other projects
 
 The cross-build system is taken from <https://github.com/pbosetti/xtemplate>.
@@ -92,6 +100,10 @@ The cross-build system is taken from <https://github.com/pbosetti/xtemplate>.
 ## Author
 
 Paolo Bosetti (`paolo dot bosetti at unitn dot it`).
+
+## Acknowledgments
+
+This project uses the C++ `inipp` library by Matthias C. M. Troffaes (<https://github.com/mcmtroffaes/inipp>), here adapted with a custom C wrapper.
 
 ## License
 
