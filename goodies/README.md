@@ -32,7 +32,7 @@ Note that that the `mosquitto.conf` file must be in the current directory.
 
 We are going to build a client for the MQTT broker. To do so, we are using a well-known library named `libmosquitto`. The library could be installed with the Ubuntu package manager as `sudo apt install libmosquitto-dev`. Unfortunately, this command installs a pretty old version of the library, version 1.6.9 at the time of writing, while the current version is 2.0.14.
 
-Consequently, we are going to download the source of the latest version and compile it. Proceeds as follows, in a WSL terminal:
+Consequently, we are going to download the source of the latest version and compile it. Proceed as follows, in a WSL terminal:
 
 ```sh
 cd ~
@@ -44,7 +44,7 @@ cmake --build build
 sudo cmake --install build
 ```
 
-Now you van verify that the installation went fine with the command:
+Now you can verify that the installation went fine with the command:
 
 ```sh
 mosquitto_sub --help
