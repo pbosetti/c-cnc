@@ -7,31 +7,33 @@ ENV DEFAULT_DOCKCROSS_IMAGE @TARGET_NAME@
 # build with: docker build -t @TARGET_NAME@ .
 # then:       docker run --rm @TARGET_NAME@ > @TARGET_NAME@ && chmod a+x @TARGET_NAME@
 
-# OpenSSL
-# Needed by mosquitto and mongodb
 RUN mkdir /build
-ENV OPENSSL_VERSION 1.0.1e
-RUN cd ${BUILDDIR} && curl -L https://launchpad.net/openssl-cmake/${OPENSSL_VERSION}/1.0.1e-1/+download/openssl-cmake-${OPENSSL_VERSION}-src.tar.gz | tar xzf - &&\ 
-    cd openssl-cmake-${OPENSSL_VERSION}-src && \
-    cmake -Bxbuild -H. -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=${CROSS_ROOT}/Toolchain.cmake -DCMAKE_INSTALL_PREFIX=${CROSS_ROOT} -DBUILD_SHARED_LIBS=ON && \
-    make -Cxbuild CFLAGS=-D_POSIX_C_SOURCE=1 install
+
+ENV OPENSSL_VERSION 3.0.1
+RUN cd ${BUILDDIR} && curl -L https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz | tar xzf - && \
+    cd openssl-${OPENSSL_VERSION} && \
+    ./Configure linux-generic32 no-shared no-tests -DL_ENDIAN --release --prefix=$CROSS_ROOT && \
+    make CC=$CROSS_TRIPLE-gcc AR=$CROSS_TRIPLE-ar RANLIB=$CROSS_TRIPLE-ranlib LD=$CROSS_TRIPLE-ld MAKEDEPPROG=$CROSS_TRIPLE-gcc PROCESSOR=ARM build_sw && \
+    make install && \
+    cd .. && rm -rf openssl-${OPENSSL_VERSION}
 
 # libmosquitto
 # See https://mosquitto.org/api/files/mosquitto-h.html
-ENV MQTT_VERSION 1.5.1
+ENV MQTT_VERSION 2.0.14
 RUN cd ${BUILDDIR} && curl -L https://github.com/eclipse/mosquitto/archive/v${MQTT_VERSION}.tar.gz | tar xzf - && \ 
     cd mosquitto-${MQTT_VERSION} && \
     cmake -DCMAKE_TOOLCHAIN_FILE=${CROSS_ROOT}/Toolchain.cmake -DDOCUMENTATION=OFF -DWITH_STATIC_LIBRARIES=ON -DWITH_PIC=ON -DCMAKE_INSTALL_PREFIX=${CROSS_ROOT} -DCMAKE_BUILD_TYPE=Release -Bxbuild -H. && \
     make -Cxbuild CFLAGS=-D_POSIX_C_SOURCE=1 install && \
-    make -Cxbuild clean
+    cd .. && rm -rf mosquitto-${MQTT_VERSION}
 
 # ncurses
 # needed by readline
-RUN cd ${BUILDDIR} && curl -L https://ftp.gnu.org/gnu/ncurses/ncurses-6.1.tar.gz |\
-    tar xzf - && cd ncurses-6.1 && \
+ENV NCURSES_VERSION 6.1
+RUN cd ${BUILDDIR} && curl -L https://ftp.gnu.org/gnu/ncurses/ncurses-${NCURSES_VERSION}.tar.gz |\
+    tar xzf - && cd ncurses-${NCURSES_VERSION} && \
     ./configure CC=$CC --prefix=$CROSS_ROOT/ --with-build-cc=cc --host=$CROSS_TRIPLE --with-shared --without-normal --without-debug --without-progs --without-ada --without-manpages --without-tests --with-build-cflags="-fPIC"  --with-build-cppflags="-fPIC" && \
     make && make install && \
-    make clean
+    cd .. && rm -rf ncurses-${NCURSES_VERSION}
 
 # readline
 # needed by lua REPL
@@ -40,25 +42,24 @@ RUN cd ${BUILDDIR} && curl -L https://ftp.gnu.org/gnu/readline/readline-${READLI
     tar xzf - && cd readline-${READLINE_VERSION} && \
     ./configure --host=${CROSS_TRIPLE} --prefix=${CROSS_ROOT} --with-curses && \
     make && make install && \
-    make clean
+    cd .. && rm -rf readline-${READLINE_VERSION}
 
 # Lua lubrary and REPL
-RUN cd ${BUILDDIR} && curl -L https://www.lua.org/ftp/lua-5.3.5.tar.gz | \
-    tar xzf - && cd lua-5.3.5  && \ 
-    # make generic CC=$CC AR="${AR} rcu" MYCFLAGS="-fPIC -I${CROSS_ROOT}/include -DLUA_USE_DLOPEN -DLUA_USE_POSIX" MYLIBS="-ldl" && \
+ENV LUA_VERSION 5.4.4
+RUN cd ${BUILDDIR} && curl -L https://www.lua.org/ftp/lua-${LUA_VERSION}.tar.gz | \
+    tar xzf - && cd lua-${LUA_VERSION}  && \ 
     make linux CC=$CC AR="${AR} rcu" MYCFLAGS="-fPIC -I${CROSS_ROOT}/include" MYLDFLAGS="-L${CROSS_ROOT}/lib -lncurses" && \
     cd src && install -m 0644 liblua.a ${CROSS_ROOT}/lib && \
     install -m 0644 lua.h luaconf.h lualib.h lauxlib.h lua.hpp ${CROSS_ROOT}/include && \
-    cd .. && \
-    make clean
+    cd ../.. && rm -rf lua-${LUA_VERSION}
 
 # ZeroMQ
-ENV ZMQ_VERSION 4.3.2
+ENV ZMQ_VERSION 4.3.4
 RUN cd ${BUILDDIR} && curl -L https://github.com/zeromq/libzmq/releases/download/v${ZMQ_VERSION}/zeromq-${ZMQ_VERSION}.tar.gz | tar xzf - && \
     cd zeromq-${ZMQ_VERSION} && \
     cmake -DCMAKE_TOOLCHAIN_FILE=${CROSS_ROOT}/Toolchain.cmake -Bxbuild -H. -DBUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=${CROSS_ROOT} -DWITH_DOCS=OFF -DZMQ_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release && \
     make -Cxbuild install && \
-    make -Cxbuild clean
+    cd .. && rm -rf zeromq-${ZMQ_VERSION}
 
 # LibYAML
 ENV LIBYAML_VERSION 0.2.2
@@ -66,14 +67,14 @@ RUN cd ${BUILDDIR} && curl -L https://github.com/yaml/libyaml/archive/${LIBYAML_
     cd libyaml-${LIBYAML_VERSION} && \
     cmake -DCMAKE_TOOLCHAIN_FILE=${CROSS_ROOT}/Toolchain.cmake -DBUILD_TESTING=OFF _DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${CROSS_ROOT} -DYAML_STATIC_LIB_NAME=yaml -Bxbuild -H. && \
     make -Cxbuild install/strip && \
-    make -Cxbuild clean
+    cd .. && rm -rf libyaml-${LIBYAML_VERSION}
 
 # Binn (serialization library)
 RUN cd ${BUILDDIR} && git clone --depth 1 https://github.com/liteserver/binn.git && cd binn && \
     $CC -fPIC -O3 -c src/binn.c && \
     $AR rcs libbinn.a binn.o && \
     install -m644 libbinn.a ${CROSS_ROOT}/lib && \
-    rm *.a *.o
+    cd .. rm binn
     
 # mruby
 @COMMENT_ENABLE_MRUBY@ENV MRUBY_VERSION 2.0.1
@@ -90,7 +91,7 @@ RUN cd ${BUILDDIR} && git clone --depth 1 https://github.com/liteserver/binn.git
 @COMMENT_ENABLE_OPENBLAS@    cd OpenBLAS-${OPENBLAS_VERSION} &&\
 @COMMENT_ENABLE_OPENBLAS@    cmake -DCMAKE_TOOLCHAIN_FILE=${CROSS_ROOT}/Toolchain.cmake -DCMAKE_INSTALL_PREFIX=${CROSS_ROOT} -DCMAKE_BUILD_TYPE=Release -Bxbuild -H. && \
 @COMMENT_ENABLE_OPENBLAS@    make -Cxbuild install && \
-@COMMENT_ENABLE_OPENBLAS@    make -Cxbuild clean
+@COMMENT_ENABLE_OPENBLAS@    cd .. && rm -rf OpenBLAS-${OPENBLAS_VERSION}
 
 # Cleanup build dir
 @COMMENT_BUILD_DIR@RUN rm -rf ${BUILDDIR}/*
