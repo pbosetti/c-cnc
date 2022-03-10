@@ -20,8 +20,8 @@
 
 int main(int argc, char const *argv[]) {
   // variables declarations
-  int value;
-  void *ini;
+  int value = 0;
+  void *ini = NULL;
   char *name = malloc(BUFLEN);
 
   // command line parsing
