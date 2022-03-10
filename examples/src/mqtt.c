@@ -37,7 +37,7 @@ void on_connect(struct mosquitto *mqt, void *obj, int rc) {
 }
 
 void on_disconnect(struct mosquitto *mqt, void *obj, int rc) {
-  printf("-> Disconnected\n");
+  printf("<- Disconnected\n");
 }
 
 void on_subscribe(struct mosquitto *mqt, void *obj, int mid, int qos_count, const int *grated_qos) {
@@ -45,13 +45,13 @@ void on_subscribe(struct mosquitto *mqt, void *obj, int mid, int qos_count, cons
 }
 
 void on_unsubscribe(struct mosquitto *mqt, void *obj, int mid) {
-  printf("-> Unsubscribed\n");
+  printf("<- Unsubscribed\n");
 }
 
 void on_message(struct mosquitto *mqt, void *obj, const struct mosquitto_message *msg) {
   userdata_t *ud = obj;
-  printf("-> topic: %s\n", msg->topic);
-  printf("   message: %s\n", (char *)msg->payload);
+  printf("<- message: %s\n", (char *)msg->payload);
+  printf("   topic: %s\n", msg->topic);
   if (strcmp((char *)msg->payload, "stop") == 0) {
     ud->run = 0;
   }
