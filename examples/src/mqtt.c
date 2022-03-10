@@ -1,3 +1,9 @@
+//   __  __  ___ _____ _____ 
+//  |  \/  |/ _ \_   _|_   _|
+//  | |\/| | | | || |   | |  
+//  | |  | | |_| || |   | |  
+//  |_|  |_|\__\_\|_|   |_|  
+// Simple MQTT client example
 #include <mosquitto.h>
 #include <stdint.h>
 #include <stdio.h>
