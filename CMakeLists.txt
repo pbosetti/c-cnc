@@ -10,6 +10,9 @@ cmake_minimum_required(VERSION 3.10)
 #                                                   |___/ 
 set(VERSION "1.0")
 project(C-CNC VERSION ${VERSION} LANGUAGES C CXX)
+if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
+  message(FATAL_ERROR "In-source builds not allowed! Create a build directory and run CMake from there.")
+endif()
 
 #    _____                           _____                      
 #   / ____|                         / ____|                     
@@ -87,14 +90,17 @@ endif()
 #  |_|   |_|  \___/| |\___|\___|\__| |_____/ \___|\__\__,_|_|_|___/
 #                 _/ |                                             
 #                |__/                                              
+# Language Standard
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED TRUE)
 # FILES
 # expect all sources in /src, except mains
 set(SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/src)
 # file(GLOB LIB_SOURCES "${SOURCE_DIR}/*.c")
 file(GLOB LIB_SOURCES_CPP "${SOURCE_DIR}/*.cpp")
-set_source_files_properties(${LIB_SOURCES_CPP} PROPERTIES COMPILE_OPTIONS -std=c++14)
 file(GLOB LIB_SOURCES "${SOURCE_DIR}/*.c")
-set_source_files_properties(${LIB_SOURCES} PROPERTIES COMPILE_OPTIONS -std=c11)
 # generate defines.h, which also contains version numbers matching git tags
 configure_file(
   ${SOURCE_DIR}/defines.h.in
