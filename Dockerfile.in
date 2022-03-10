@@ -12,7 +12,7 @@ RUN mkdir /build
 ENV OPENSSL_VERSION 3.0.1
 RUN cd ${BUILDDIR} && curl -L https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz | tar xzf - && \
     cd openssl-${OPENSSL_VERSION} && \
-    ./Configure linux-generic32 no-shared no-tests -DL_ENDIAN --release --prefix=$CROSS_ROOT && \
+    ./Configure @OPENSSL_LINUX_TYPE@ no-shared no-tests -DL_ENDIAN --release --prefix=$CROSS_ROOT && \
     make CC=$CROSS_TRIPLE-gcc AR=$CROSS_TRIPLE-ar RANLIB=$CROSS_TRIPLE-ranlib LD=$CROSS_TRIPLE-ld MAKEDEPPROG=$CROSS_TRIPLE-gcc PROCESSOR=ARM build_sw && \
     make install && \
     cd .. && rm -rf openssl-${OPENSSL_VERSION}

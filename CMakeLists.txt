@@ -183,6 +183,11 @@ if(NATIVE)
     set(TARGET_NAME "armv7a")
   endif()
   set_property(CACHE TARGET_NAME PROPERTY STRINGS mipsel armv6 armv7 armv7a arm64)
+  if(TARGET_NAME MATCHES "arm64")
+    set(OPENSSL_LINUX_TYPE "linux-generic64")
+  else()
+    set(OPENSSL_LINUX_TYPE "linux-generic32")
+  endif()
   configure_file(
     ${CMAKE_HOME_DIRECTORY}/Dockerfile.in
     ${CMAKE_HOME_DIRECTORY}/Dockerfile
