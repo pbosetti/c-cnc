@@ -51,7 +51,7 @@ elseif(UNIX AND NOT APPLE)
   set(LINUX TRUE)
   set(NATIVE TRUE)
   include_directories(/usr/local/include)
-  link_directories(/usr/lib/x86_64-linux-gnu)
+  link_directories(/usr/lib/x86_64-linux-gnu /usr/local/lib)
 elseif(APPLE)
   message(STATUS "Building on Apple OS X")
   set(NATIVE TRUE)
@@ -69,7 +69,7 @@ endif(NOT CMAKE_BUILD_TYPE)
 message(STATUS "CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
 
 # COMPILE OPTIONS
-add_compile_options(-fPIC -D_GNU_SOURCE)
+add_compile_options(-fPIC -D_GNU_SOURCE -Wno-backslash-newline-escape)
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
   message(STATUS "Debug mode, enabling all warnings")
   add_compile_options(-Wall -Wno-comment)
@@ -79,7 +79,7 @@ endif()
 if (APPLE)
   set(CMAKE_INSTALL_RPATH "@executable_path/../lib")
 else()
-  set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
+  set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib;/usr/local/lib")
 endif()
 
 #   _____           _           _     _____       _        _ _     
@@ -100,8 +100,8 @@ set(CMAKE_C_STANDARD_REQUIRED TRUE)
 set(SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/src)
 # file(GLOB LIB_SOURCES "${SOURCE_DIR}/*.c")
 file(GLOB LIB_SOURCES_CPP "${SOURCE_DIR}/*.cpp")
-file(GLOB LIB_SOURCES "${SOURCE_DIR}/*.c")
-# generate defines.h, which also contains version numbers matching git tags
+file(GLOB LIB_SOURCES "${SOURCE_DIR}/*.{c,h}")
+# generate defines.h
 configure_file(
   ${SOURCE_DIR}/defines.h.in
   ${SOURCE_DIR}/defines.h
@@ -109,17 +109,21 @@ configure_file(
 
 # TARGETS
 add_executable(ini_test ${SOURCE_DIR}/main/ini_test.c)
+add_executable(mqtt_test ${SOURCE_DIR}/main/mqtt_test.c)
 
 list(APPEND TARGETS_LIST
   ini_test
+  mqtt_test
 )
 
 if(IS_ARM)
   add_library(${PROJECT_NAME}_static STATIC ${LIB_SOURCES} ${LIB_SOURCES_CPP})
   target_link_libraries(ini_test ${PROJECT_NAME}_static)
+  target_link_libraries(mqtt_test ${PROJECT_NAME}_static mosquitto)
 else()
   add_library(${PROJECT_NAME}_shared SHARED ${LIB_SOURCES} ${LIB_SOURCES_CPP})
   target_link_libraries(ini_test ${PROJECT_NAME}_shared)
+  target_link_libraries(mqtt_test ${PROJECT_NAME}_shared mosquitto)
   list(APPEND TARGETS_LIST ${PROJECT_NAME}_shared)
 endif()
 
