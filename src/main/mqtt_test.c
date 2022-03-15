@@ -11,20 +11,21 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/errno.h>
+#include <time.h>
 #include <unistd.h>
 
-//       _       __ _       _ _   _
-//    __| | ___ / _(_)_ __ (_) |_(_) ___  _ __  ___
-//   / _` |/ _ \ |_| | '_ \| | __| |/ _ \| '_ \/ __|
-//  | (_| |  __/  _| | | | | | |_| | (_) | | | \__ \
-//   \__,_|\___|_| |_|_| |_|_|\__|_|\___/|_| |_|___/
-//
-#define MQT_SUB_PAT "test/#"
-// preprocessor macros and constants
+//   ____            _                 _   _                 
+//  |  _ \  ___  ___| | __ _ _ __ __ _| |_(_) ___  _ __  ___ 
+//  | | | |/ _ \/ __| |/ _` | '__/ _` | __| |/ _ \| '_ \/ __|
+//  | |_| |  __/ (__| | (_| | | | (_| | |_| | (_) | | | \__ \
+//  |____/ \___|\___|_|\__,_|_|  \__,_|\__|_|\___/|_| |_|___/
+// 
+// Preprocessor macros and constants
 #define BUFLEN 1024
 #define INI_SECTION "MQTT"
 #define INI_FILE "settings.ini"
 
+// Custom types
 typedef struct {
   char broker_addr[BUFLEN];
   int broker_port;
@@ -33,56 +34,29 @@ typedef struct {
   struct mosquitto_message *msg;
 } userdata_t;
 
-//             _ _ _                _
-//    ___ __ _| | | |__   __ _  ___| | _____
-//   / __/ _` | | | '_ \ / _` |/ __| |/ / __|
-//  | (_| (_| | | | |_) | (_| | (__|   <\__ \
-//   \___\__,_|_|_|_.__/ \__,_|\___|_|\_\___/
-//
-void on_connect(struct mosquitto *mqt, void *obj, int rc) {
-  userdata_t *ud = obj;
-  printf("-> Connected to %s:%d\n", ud->broker_addr, ud->broker_port);
-  // subscribe
-  if ((mosquitto_subscribe(mqt, NULL, ud->topic, 1)) != MOSQ_ERR_SUCCESS) {
-    perror("Could not suscribe");
-    exit(4);
-  }
-}
+// Functions
+void on_connect(struct mosquitto *mqt, void *obj, int rc);
 
-void on_disconnect(struct mosquitto *mqt, void *obj, int rc) {
-  printf("<- Disconnected\n");
-}
+void on_disconnect(struct mosquitto *mqt, void *obj, int rc);
 
 void on_subscribe(struct mosquitto *mqt, void *obj, int mid, int qos_count,
-                  const int *grated_qos) {
-  userdata_t *ud = obj;
-  printf("-> Subscribed to topic %s\n", ud->topic);
-}
+                  const int *grated_qos);
 
-void on_unsubscribe(struct mosquitto *mqt, void *obj, int mid) {
-  printf("<- Unsubscribed\n");
-}
+void on_unsubscribe(struct mosquitto *mqt, void *obj, int mid);
 
 void on_message(struct mosquitto *mqt, void *obj,
-                const struct mosquitto_message *msg) {
-  userdata_t *ud = obj;
-  printf("<- message: %s\n", (char *)msg->payload);
-  printf("   topic: %s\n", msg->topic);
-  if (strcmp((char *)msg->payload, "stop") == 0) {
-    ud->run = 0;
-  }
-  mosquitto_message_copy(ud->msg, msg);
-}
+                const struct mosquitto_message *msg);
 
 //                   _
 //   _ __ ___   __ _(_)_ __
-//  | '_ ` _ \ / _` | | '_ \ 
+//  | '_ ` _ \ / _` | | '_ \
 //  | | | | | | (_| | | | | |
 //  |_| |_| |_|\__,_|_|_| |_|
 //
 int main(int argc, char const *argv[]) {
   struct mosquitto *mqt;
   void *ini = NULL;
+  uint64_t delay = 0;
   userdata_t ud = {.run = 1};
 
   if (argc == 2)
@@ -100,6 +74,8 @@ int main(int argc, char const *argv[]) {
   ini_get_char(ini, INI_SECTION, "broker_addr", ud.broker_addr, BUFLEN);
   ini_get_int(ini, INI_SECTION, "broker_port", &ud.broker_port);
   ini_get_char(ini, INI_SECTION, "topic", ud.topic, BUFLEN);
+  ini_get_uint64_t(ini, INI_SECTION, "delay", &delay);
+  printf("Looping with delay %.4f s\n", (float)delay / 1E6);
 
   // Initialize library
   if (mosquitto_lib_init() != MOSQ_ERR_SUCCESS) {
@@ -140,7 +116,9 @@ int main(int argc, char const *argv[]) {
       perror("mosquitto loop error");
       break;
     }
-    usleep(10E3);
+    if (delay > 0) {
+      usleep(delay);
+    }
   }
 
   // unsubscribe
@@ -156,4 +134,55 @@ int main(int argc, char const *argv[]) {
   mosquitto_destroy(mqt);
   mosquitto_lib_cleanup();
   return 0;
+}
+
+//   ____        __ _       _ _   _                 
+//  |  _ \  ___ / _(_)_ __ (_) |_(_) ___  _ __  ___ 
+//  | | | |/ _ \ |_| | '_ \| | __| |/ _ \| '_ \/ __|
+//  | |_| |  __/  _| | | | | | |_| | (_) | | | \__ \
+//  |____/ \___|_| |_|_| |_|_|\__|_|\___/|_| |_|___/
+// 
+void on_connect(struct mosquitto *mqt, void *obj, int rc) {
+  userdata_t *ud = obj;
+  printf("-> Connected to %s:%d\n", ud->broker_addr, ud->broker_port);
+  // subscribe
+  if ((mosquitto_subscribe(mqt, NULL, ud->topic, 1)) != MOSQ_ERR_SUCCESS) {
+    perror("Could not suscribe");
+    exit(4);
+  }
+}
+
+void on_disconnect(struct mosquitto *mqt, void *obj, int rc) {
+  printf("<- Disconnected\n");
+}
+
+void on_subscribe(struct mosquitto *mqt, void *obj, int mid, int qos_count,
+                  const int *grated_qos) {
+  userdata_t *ud = obj;
+  printf("-> Subscribed to topic %s\n", ud->topic);
+}
+
+void on_unsubscribe(struct mosquitto *mqt, void *obj, int mid) {
+  printf("<- Unsubscribed\n");
+}
+
+void on_message(struct mosquitto *mqt, void *obj,
+                const struct mosquitto_message *msg) {
+  userdata_t *ud = obj;
+  struct timespec ts;
+  double t = 0;
+  static double t0 = 0;
+  clock_gettime(CLOCK_REALTIME, &ts);
+  if (strncmp((char *)msg->payload, "msg#000", msg->payloadlen) == 0) {
+    t0 = ts.tv_sec + ts.tv_nsec / 1.0E9;
+    t = 0.0;
+  } else {
+    t = ts.tv_sec + ts.tv_nsec / 1.0E9 - t0;
+  }
+  printf("<- message: %s @ %f\n", (char *)msg->payload, t);
+  printf("   topic: %s\n", msg->topic);
+  if (strcmp((char *)msg->payload, "stop") == 0) {
+    ud->run = 0;
+  }
+  mosquitto_message_copy(ud->msg, msg);
 }
