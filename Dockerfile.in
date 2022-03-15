@@ -92,6 +92,15 @@ RUN cd ${BUILDDIR} && git clone --depth 1 https://github.com/liteserver/binn.git
 @COMMENT_ENABLE_OPENBLAS@    make -Cxbuild install && \
 @COMMENT_ENABLE_OPENBLAS@    cd .. && rm -rf OpenBLAS-${OPENBLAS_VERSION}
 
+# GSL
+ENV GSL_VERSION 2.7
+RUN cd ${BUILDDIR} &&\
+    curl -L https://ftp.gnu.org/gnu/gsl/gsl-2.7.tar.gz | tar xzf - &&\
+    cd gsl-${GSL_VERSION} &&\
+    ./configure --prefix=$CROSS_ROOT/ CC=$CROSS_TRIPLE-gcc AR=$CROSS_TRIPLE-ar RANLIB=$CROSS_TRIPLE-ranlib LD=$CROSS_TRIPLE-ld --disable-shared --enable-static --host=$CROSS_TRIPLE &&\
+    make -j2 && make install &&\
+    cd .. && rm -rf gsl-${GSL_VERSION}
+
 # Cleanup build dir
 @COMMENT_BUILD_DIR@RUN rm -rf ${BUILDDIR}/*
 
