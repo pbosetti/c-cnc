@@ -1,11 +1,13 @@
 //   _____                     __                      
 //  |_   _| __ __ _ _ __  ___ / _| ___  _ __ _ __ ___  
-//    | || '__/ _` | '_ \/ __| |_ / _ \| '__| '_ ` _ \ 
+//    | || '__/ _` | '_ \/ __| |_ / _ \| '__| '_ ` _ \
 //    | || | | (_| | | | \__ \  _| (_) | |  | | | | | |
 //    |_||_|  \__,_|_| |_|___/_|  \___/|_|  |_| |_| |_|
 // 
 // Roto-translation of a point in 3D
 // Rotation is about Z axis on XY plane
+// Build with:
+//    clang -lgsl -lgslcblas -lm -o transform src/transform.c
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_blas.h>
