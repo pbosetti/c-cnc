@@ -5,8 +5,7 @@ slprj/
 /examples/*
 !/examples/*.md
 !/examples/src
-build
-xbuild
+/*build*
 /src/defines.h
 Dockerfile
 /arm*
