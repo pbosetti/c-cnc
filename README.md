@@ -39,19 +39,50 @@ I suggest to configure VS Code with the following settings. Open the settings fi
 It there are already other items in the JSON file, just add (don't replace) the above ones to the list (pay attention to separate each line with a comma and to put everithyng in between the outer curly braces).
 
 ## Prerequisites
+Regardless your platform, begin with installing Visual Studio Code. Then open a terminal and type the following to install commonly used VSCode extensions:
 
-The project must be built with a linux toolchain. On Windows, we are using a WSL2 environment with Ubuntu OS. To enable the compilation we need to install a few packages: on the linux console, type:
-
-```bash
-sudo apt install build-essential make cmake cmake-curses-gui clang clang-format lldb libgsl-dev ruby figlet
-sudo gem install gv_fsm
+```sh
 code --install-extension xaver.clang-format
 code --install-extension tintinweb.graphviz-interactive-preview
 code --install-extension canna.figlet
 code --install-extension Juancete.gcode-formatter
 code --install-extension vscode-gcode.gcode
+```
+
+### 🪟 Windows (or 🐧 Ubuntu/Debian Linux)
+The project must be built with a linux toolchain. On Windows, we are using a WSL2 environment with Ubuntu OS. To enable the compilation we need to install a few packages: on the linux console, type:
+
+```bash
+sudo apt install build-essential make cmake cmake-curses-gui clang clang-format lldb libgsl-dev ruby figlet
+sudo gem install gv_fsm
 sudo update-alternatives --set c++ /usr/bin/clang++
 sudo update-alternatives --set cc /usr/bin/clang
+```
+
+### 🍎 MacOS
+You need to have Xcode installed: do that through the App Store and—once finished—launch Xcode and accept the licence terms. Then you can close it.
+
+On MacOS, the command equivalent to `apt` is `brew`: you have to install it by following the instructions on <https://brew.sh>, which means to type the following in the Terminal.app:
+
+```sh
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+Then **close the terminal** and open a new one and proceed as follows:
+
+```sh
+brew install figlet gsl clang-format graphviz gpg
+brew install --cask cmake
+curl -sSL https://rvm.io/mpapis.asc | gpg --import -
+curl -sSL https://rvm.io/pkuczynski.asc | gpg --import -
+curl -sSL https://get.rvm.io | bash -s stable --auto-dotfiles
+```
+
+Close and open a new terminal, again, then:
+
+```sh
+rvm install ruby-2.7
+gem install gv_fsm
 ```
 
 
