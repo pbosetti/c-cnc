@@ -88,11 +88,11 @@ gem install gv_fsm
 
 ## Build with Cmake
 
-Building a project with Cmake is a two-step process. The first step is called *configuration*, and it results in populating the `build` folder with all the contents needed for the compilation. The second step is called *compilation* and results in the products of the build to be created in the root of the `build` folder. There is an optional third step, *install*, that copies the build products into a destination folder. This project os configured to have the local `bin` forder as destination.
+Building a project with Cmake is a two-step process. The first step is called *configuration*, and it results in populating the `build` folder with all the contents needed for the compilation. The second step is called *compilation* and results in the products of the build to be created in the root of the `build` folder. There is an optional third step, *install*, that copies the build products into a destination folder. This project is configured to have the local `bin` forder as destination.
 
-1. (configuring) from the terminal, be sure to be in the project's toot directory and then issue the command `cmake	-Bbuild .`: this means configure the project in the `build` directory, searching for the `CMakeLists.txt` file in the current directory (that is `.`)
-3. (compilation) from the terminal, compile the project with the command `make -C build` 
-4. (optional install) if you want to install the build products, type `make -C build install`: this copies binaries into the `bin` and `lib` folders of the root project folder
+1. (configuring) from the terminal, be sure to be in the project's toot directory and then issue the command `cmake	-Bbuild`: this means configure the project in the `build` directory, searching for the `CMakeLists.txt` file in the current directory
+2. (compilation) from the terminal, compile the project with the command `make -C build` 
+3. (optional install) if you want to install the build products, type `make -C build install`: this copies binaries into the `bin` and `lib` folders of the root project folder
 
 **Note 1.**: the `cmake` command must be run the first time, and then every time that you create, move, or rename source files. Conversely, if you only change contents of source files, then you only need to `make`. The `make` command is smart enough not to recompile files that have been already compiled and that are unchanged from the previous build: this reduces a lot the compilation time for large projects. The option `-Cbuild` (the space is optional) tells make to work in the directory `build`.
 
