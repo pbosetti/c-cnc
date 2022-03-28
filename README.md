@@ -47,6 +47,7 @@ code --install-extension tintinweb.graphviz-interactive-preview
 code --install-extension canna.figlet
 code --install-extension Juancete.gcode-formatter
 code --install-extension vscode-gcode.gcode
+code --install-extension vadimcn.vscode-lldb
 ```
 
 ### 🪟 Windows (or 🐧 Ubuntu/Debian Linux)
