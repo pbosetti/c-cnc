@@ -11,12 +11,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-//   ____            _                 _   _                 
-//  |  _ \  ___  ___| | __ _ _ __ __ _| |_(_) ___  _ __  ___ 
+//   ____            _                 _   _
+//  |  _ \  ___  ___| | __ _ _ __ __ _| |_(_) ___  _ __  ___
 //  | | | |/ _ \/ __| |/ _` | '__/ _` | __| |/ _ \| '_ \/ __|
 //  | |_| |  __/ (__| | (_| | | | (_| | |_| | (_) | | | \__ \
 //  |____/ \___|\___|_|\__,_|_|  \__,_|\__|_|\___/|_| |_|___/
-// 
+//
 // preprocessor macros and constants
 #define BUFLEN 1024
 #define INI_SECTION "MQTT"
@@ -27,6 +27,8 @@ typedef struct {
   char broker_addr[BUFLEN];
   int broker_port;
   char topic[BUFLEN];
+  char user[BUFLEN];
+  char password[BUFLEN];
   int run;
   struct mosquitto_message *msg;
 } userdata_t;
@@ -58,7 +60,7 @@ int main(int argc, char const *argv[]) {
 
   ini_get_char(ini, INI_SECTION, "broker_addr", ud.broker_addr, BUFLEN);
   ini_get_int(ini, INI_SECTION, "broker_port", &ud.broker_port);
-  ini_get_char(ini, INI_SECTION, "topic", ud.topic, BUFLEN);
+  ini_get_char(ini, INI_SECTION, "pub_topic", ud.topic, BUFLEN);
 
   // Initialize library
   if (mosquitto_lib_init() != MOSQ_ERR_SUCCESS) {
@@ -79,6 +81,17 @@ int main(int argc, char const *argv[]) {
     exit(2);
   }
 
+  // if username and password are present, then authenticate
+  if (ini_get_char(ini, INI_SECTION, "user", ud.user, BUFLEN) &&
+      ini_get_char(ini, INI_SECTION, "password", ud.password, BUFLEN)) {
+    if ((mosquitto_username_pw_set(mqt, ud.user, ud.password)) !=
+        MOSQ_ERR_SUCCESS) {
+      perror("Error setting credentials");
+    }
+  } else { // anonymous connection
+    printf("Connecting anonymously\n");
+  }
+
   // connect to broker (localhost)
   if ((mosquitto_connect(mqt, ud.broker_addr, ud.broker_port, 10)) !=
       MOSQ_ERR_SUCCESS) {
@@ -88,7 +101,7 @@ int main(int argc, char const *argv[]) {
 
   while (i < 100) {
     sprintf(pl, "msg#%03d", i);
-    mosquitto_publish(mqt, NULL, "ccnc/set", strlen(pl), pl, 0, 0);
+    mosquitto_publish(mqt, NULL, ud.topic, strlen(pl), pl, 0, 0);
     if (mosquitto_loop(mqt, 0, 1) != MOSQ_ERR_SUCCESS) {
       perror("mosquitto loop error");
       break;

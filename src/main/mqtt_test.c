@@ -14,12 +14,12 @@
 #include <time.h>
 #include <unistd.h>
 
-//   ____            _                 _   _                 
-//  |  _ \  ___  ___| | __ _ _ __ __ _| |_(_) ___  _ __  ___ 
+//   ____            _                 _   _
+//  |  _ \  ___  ___| | __ _ _ __ __ _| |_(_) ___  _ __  ___
 //  | | | |/ _ \/ __| |/ _` | '__/ _` | __| |/ _ \| '_ \/ __|
 //  | |_| |  __/ (__| | (_| | | | (_| | |_| | (_) | | | \__ \
 //  |____/ \___|\___|_|\__,_|_|  \__,_|\__|_|\___/|_| |_|___/
-// 
+//
 // Preprocessor macros and constants
 #define BUFLEN 1024
 #define INI_SECTION "MQTT"
@@ -30,6 +30,8 @@ typedef struct {
   char broker_addr[BUFLEN];
   int broker_port;
   char topic[BUFLEN];
+  char user[BUFLEN];
+  char password[BUFLEN];
   int run;
   struct mosquitto_message *msg;
 } userdata_t;
@@ -73,7 +75,7 @@ int main(int argc, char const *argv[]) {
 
   ini_get_char(ini, INI_SECTION, "broker_addr", ud.broker_addr, BUFLEN);
   ini_get_int(ini, INI_SECTION, "broker_port", &ud.broker_port);
-  ini_get_char(ini, INI_SECTION, "topic", ud.topic, BUFLEN);
+  ini_get_char(ini, INI_SECTION, "sub_topic", ud.topic, BUFLEN);
   ini_get_uint64_t(ini, INI_SECTION, "delay", &delay);
   printf("Looping with delay %.4f s\n", (float)delay / 1E6);
 
@@ -102,6 +104,17 @@ int main(int argc, char const *argv[]) {
   mosquitto_subscribe_callback_set(mqt, on_subscribe);
   mosquitto_unsubscribe_callback_set(mqt, on_unsubscribe);
   mosquitto_message_callback_set(mqt, on_message);
+
+  // if username and password are present, then authenticate
+  if (ini_get_char(ini, INI_SECTION, "user", ud.user, BUFLEN) &&
+      ini_get_char(ini, INI_SECTION, "password", ud.password, BUFLEN)) {
+    if ((mosquitto_username_pw_set(mqt, ud.user, ud.password)) !=
+        MOSQ_ERR_SUCCESS) {
+      perror("Error setting credentials");
+    }
+  } else { // anonymous connection
+    printf("Connecting anonymously\n");
+  }
 
   // connect to broker (localhost)
   if ((mosquitto_connect(mqt, ud.broker_addr, ud.broker_port, 10)) !=
@@ -136,12 +149,12 @@ int main(int argc, char const *argv[]) {
   return 0;
 }
 
-//   ____        __ _       _ _   _                 
-//  |  _ \  ___ / _(_)_ __ (_) |_(_) ___  _ __  ___ 
+//   ____        __ _       _ _   _
+//  |  _ \  ___ / _(_)_ __ (_) |_(_) ___  _ __  ___
 //  | | | |/ _ \ |_| | '_ \| | __| |/ _ \| '_ \/ __|
 //  | |_| |  __/  _| | | | | | |_| | (_) | | | \__ \
 //  |____/ \___|_| |_|_| |_|_|\__|_|\___/|_| |_|___/
-// 
+//
 void on_connect(struct mosquitto *mqt, void *obj, int rc) {
   userdata_t *ud = obj;
   printf("-> Connected to %s:%d\n", ud->broker_addr, ud->broker_port);
