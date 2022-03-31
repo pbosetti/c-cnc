@@ -7,9 +7,11 @@
 #include "../defines.h"
 #include "../inic.h"
 #include <mosquitto.h>
+#include <mqtt_protocol.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 //   ____            _                 _   _
 //  |  _ \  ___  ___| | __ _ _ __ __ _| |_(_) ___  _ __  ___
@@ -29,9 +31,12 @@ typedef struct {
   char topic[BUFLEN];
   char user[BUFLEN];
   char password[BUFLEN];
-  int run;
+  int run, connecting;
   struct mosquitto_message *msg;
 } userdata_t;
+
+// callbacks
+void on_connect(struct mosquitto *mqt, void *obj, int rc);
 
 //                   _
 //   _ __ ___   __ _(_)_ __
@@ -42,7 +47,7 @@ typedef struct {
 int main(int argc, char const *argv[]) {
   struct mosquitto *mqt;
   void *ini = NULL;
-  userdata_t ud = {.run = 1};
+  userdata_t ud = {.run = 1, .connecting = 1};
   char pl[BUFLEN] = "";
   int i = 0;
 
@@ -61,6 +66,8 @@ int main(int argc, char const *argv[]) {
   ini_get_char(ini, INI_SECTION, "broker_addr", ud.broker_addr, BUFLEN);
   ini_get_int(ini, INI_SECTION, "broker_port", &ud.broker_port);
   ini_get_char(ini, INI_SECTION, "pub_topic", ud.topic, BUFLEN);
+  ini_get_char(ini, INI_SECTION, "user", ud.user, BUFLEN);
+  ini_get_char(ini, INI_SECTION, "password", ud.password, BUFLEN);
 
   // Initialize library
   if (mosquitto_lib_init() != MOSQ_ERR_SUCCESS) {
@@ -81,9 +88,11 @@ int main(int argc, char const *argv[]) {
     exit(2);
   }
 
+  // set callbacks
+  mosquitto_connect_callback_set(mqt, on_connect);
+
   // if username and password are present, then authenticate
-  if (ini_get_char(ini, INI_SECTION, "user", ud.user, BUFLEN) &&
-      ini_get_char(ini, INI_SECTION, "password", ud.password, BUFLEN)) {
+  if (strlen(ud.user) * strlen(ud.password) > 0) {
     if ((mosquitto_username_pw_set(mqt, ud.user, ud.password)) !=
         MOSQ_ERR_SUCCESS) {
       perror("Error setting credentials");
@@ -92,6 +101,9 @@ int main(int argc, char const *argv[]) {
     printf("Connecting anonymously\n");
   }
 
+  // start mosquitto threaded loop
+  mosquitto_loop_start(mqt);
+
   // connect to broker (localhost)
   if ((mosquitto_connect(mqt, ud.broker_addr, ud.broker_port, 10)) !=
       MOSQ_ERR_SUCCESS) {
@@ -99,19 +111,37 @@ int main(int argc, char const *argv[]) {
     exit(3);
   }
 
-  while (i < 100) {
+  // wait for asynchronous connect to happen
+  while (ud.connecting) {}
+
+  // main loop
+  while (ud.run && i < 100) {
     sprintf(pl, "msg#%03d", i);
-    mosquitto_publish(mqt, NULL, ud.topic, strlen(pl), pl, 0, 0);
-    if (mosquitto_loop(mqt, 0, 1) != MOSQ_ERR_SUCCESS) {
-      perror("mosquitto loop error");
-      break;
-    }
+    mosquitto_publish(mqt, NULL, ud.topic, strlen(pl), pl, 2, 0);
     i++;
   }
+
+  usleep(500000);
 
   // cleanup
   mosquitto_disconnect(mqt);
   mosquitto_destroy(mqt);
   mosquitto_lib_cleanup();
   return 0;
+}
+
+void on_connect(struct mosquitto *mqt, void *obj, int rc) {
+  userdata_t *ud = obj;
+  if (rc == CONNACK_ACCEPTED) {
+    printf("-> Connected to %s:%d\n", ud->broker_addr, ud->broker_port);
+    // subscribe
+    if ((mosquitto_subscribe(mqt, NULL, ud->topic, 1)) != MOSQ_ERR_SUCCESS) {
+      perror("Could not suscribe");
+      exit(4);
+    }
+  } else {
+    printf("-X Connection error: %s\n", mosquitto_connack_string(rc));
+    ud->run = 0;
+  }
+  ud->connecting = 0;
 }
