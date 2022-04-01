@@ -117,11 +117,15 @@ int main(int argc, char const *argv[]) {
   // main loop
   while (ud.run && i < 100) {
     sprintf(pl, "msg#%03d", i);
-    mosquitto_publish(mqt, NULL, ud.topic, strlen(pl), pl, 2, 0);
+    mosquitto_publish(mqt, NULL, ud.topic, strlen(pl), pl, 0, 0);
     i++;
   }
 
-  usleep(500000);
+  // wait for publishing to be done
+  while (mosquitto_want_write(mqt)) { 
+    // sleep must be larger than the average time needed for a publish op
+    usleep(10000);  
+  }
 
   // cleanup
   mosquitto_disconnect(mqt);
