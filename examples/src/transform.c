@@ -7,7 +7,9 @@
 // Roto-translation of a point in 3D
 // Rotation is about Z axis on XY plane
 // Build with:
-//    clang -lgsl -lgslcblas -lm -o transform src/transform.c
+//    clang -lgsl -lm -o transform src/transform.c
+// If you want to use gcc, the order MATTERS:
+//    gcc src/transform.c -lgsl -lm -o transform
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_blas.h>
