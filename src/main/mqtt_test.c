@@ -14,6 +14,8 @@
 #include <sys/errno.h>
 #include <time.h>
 #include <unistd.h>
+#include <setjmp.h>
+#include <signal.h>
 
 //   ____            _                 _   _
 //  |  _ \  ___  ___| | __ _ _ __ __ _| |_(_) ___  _ __  ___
@@ -50,6 +52,27 @@ void on_unsubscribe(struct mosquitto *mqt, void *obj, int mid);
 void on_message(struct mosquitto *mqt, void *obj,
                 const struct mosquitto_message *msg);
 
+//   ____  _                   _   _                     _ _               
+//  / ___|(_) __ _ _ __   __ _| | | |__   __ _ _ __   __| | | ___ _ __ ___ 
+//  \___ \| |/ _` | '_ \ / _` | | | '_ \ / _` | '_ \ / _` | |/ _ \ '__/ __|
+//   ___) | | (_| | | | | (_| | | | | | | (_| | | | | (_| | |  __/ |  \__ \
+//  |____/|_|\__, |_| |_|\__,_|_| |_| |_|\__,_|_| |_|\__,_|_|\___|_|  |___/
+//           |___/                                                         
+enum jump_code {EXIT = 1, RESTART };
+sigjmp_buf JumpBuffer;
+void sig_handler(int signal) {
+  switch (signal)
+  {
+  case SIGINT:
+    siglongjmp(JumpBuffer, EXIT);
+    break;
+  case SIGINFO:
+    siglongjmp(JumpBuffer, RESTART);
+  default:
+    break;
+  }
+}
+
 //                   _
 //   _ __ ___   __ _(_)_ __
 //  | '_ ` _ \ / _` | | '_ \
@@ -61,6 +84,18 @@ int main(int argc, char const *argv[]) {
   void *ini = NULL;
   uint64_t delay = 0;
   userdata_t ud = {.run = 1, .connecting = 1};
+  int rc = 0;
+  char *buf = NULL;
+
+  signal(SIGINFO, sig_handler);
+  signal(SIGINT, sig_handler);
+start:
+  rc = 0;
+  ud.run = 1;
+  ud.connecting = 1;
+
+  buf = malloc(1024 * 1024 * 1024);
+  memset(buf, 0, 1024 * 1024 * 1024);
 
   if (argc == 2)
     ini = ini_init(argv[1]);
@@ -139,7 +174,12 @@ int main(int argc, char const *argv[]) {
     if (delay > 0) {
       usleep(delay);
     }
+    rc = sigsetjmp(JumpBuffer, 1);
+    if (rc > 0) {
+      ud.run = 0;
+    }
   }
+  printf("Exiting loop\n");
 
   // unsubscribe
   mosquitto_unsubscribe(mqt, NULL, ud.topic);
@@ -153,6 +193,10 @@ int main(int argc, char const *argv[]) {
   mosquitto_disconnect(mqt);
   mosquitto_destroy(mqt);
   mosquitto_lib_cleanup();
+  free(buf);
+  if (rc == RESTART) {
+    goto start;
+  }
   return 0;
 }
 
