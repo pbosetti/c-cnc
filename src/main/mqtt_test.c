@@ -94,8 +94,8 @@ start:
   ud.run = 1;
   ud.connecting = 1;
 
-  buf = malloc(1024 * 1024 * 1024);
-  memset(buf, 0, 1024 * 1024 * 1024);
+  buf = malloc(1 << 30);
+  memset(buf, 0, 1 << 30);
 
   if (argc == 2)
     ini = ini_init(argv[1]);
