@@ -46,6 +46,9 @@ int main(int argc, char const *argv[]) {
   clock_gettime(CLOCK_MONOTONIC, &ts);
   t0 = ts.tv_sec + ts.tv_nsec / 1.0E9;
 
+  // header
+  printf("n, dt\n");
+  
   // main loop
   for (i = 0; i < 1000; i++) {
     // the sleep waits for the next SIGALRM, but no more than 1 s
@@ -55,7 +58,7 @@ int main(int argc, char const *argv[]) {
     t = ts.tv_sec + ts.tv_nsec / 1.0E9;
     dt = t - t0;
     t0 = t;
-    printf("%03d %f\n", i, dt);
+    printf("%03d, %f\n", i, dt);
     // here we do our business, which is supposed to take less than 5000 us
   }
 

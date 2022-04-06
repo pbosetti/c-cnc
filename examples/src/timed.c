@@ -32,6 +32,9 @@ int main(int argc, char const *argv[]) {
   clock_gettime(CLOCK_MONOTONIC, &ts);
   t0 = ts.tv_sec + ts.tv_nsec / 1.0E9;
 
+  // header
+  printf("n, dt\n");
+  
   // main loop
   for (i = 0; i < 1000; i++) {
     // let's create the thread
@@ -43,7 +46,7 @@ int main(int argc, char const *argv[]) {
     t = ts.tv_sec + ts.tv_nsec / 1.0E9;
     dt = t - t0;
     t0 = t;
-    printf("%03d %f\n", i, dt);
+    printf("%03d, %f\n", i, dt);
     // let's pretend to do domething that takes 100 us
     usleep(100);
     // finally, wait for the timing thread to elapse and return:
