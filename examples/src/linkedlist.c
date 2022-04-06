@@ -141,6 +141,12 @@ typedef enum {
 // userdata is a pointer to anything: a value, an aray or a struct; this
 // enables the user to implement the function with maximum flexibility
 typedef void (*loop_fun_t)(element_t *e, loop_order_t o, void *userdata);
+//     |-a-|   |---b----|  |--------------------c---------------------|
+// (a) is the return function
+// (b) is the name of the type
+// (c) is the function prototype, i.e. the list of arguments
+// any function passed as 2nd argument of list_loop() must adhere this 
+// signature, i.e. return void and take arguments as in (a)
 
 // loop over all elements in the list in a given order, calling fun over
 // each element in turn
