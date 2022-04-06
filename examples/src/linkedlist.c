@@ -21,6 +21,14 @@ typedef struct {
   size_t length;
 } list_t;
 
+// The list is a chain of structures linked with twin pointers:
+//         ┌───┬──────┐     ┌───┬──────┐     ┌───┬──────┐
+// NULL ◄──┤ P │      │◄────┤ P │      │◄────┤ P │      │
+//         ├───┘  ┌───┤     ├───┘  ┌───┤     ├───┘  ┌───┤
+//         │      │ N ├────►│      │ N ├────►│      │ N ├──► NULL
+//         └──────┴───┘     └──────┴───┘     └──────┴───┘
+
+
 // Create a new list with one element in it
 list_t *list_new(char *id) {
   // allocate memory for the list
@@ -61,6 +69,21 @@ void list_append(list_t *list, char *id) {
 }
 
 // inserting an existing element after a given ID
+//
+//                             "after"
+//         ┌───┬──────┐     ┌───┬──────┐       ┌───┬──────┐
+// NULL ◄──┤ P │      │◄────┤ P │      │     ┌─┤ P │      │
+//         ├───┘  ┌───┤     ├───┘  ┌───┤     │ ├───┘  ┌───┤
+//         │      │ N ├────►│      │ N ├──┐  │ │      │ N ├──► NULL
+//         └──────┴───┘     └────▲─┴───┘  │  │ └───▲──┴───┘
+//                               │        │  │     │
+//                               │        │  │     │
+//                               │   ┌───┐▼──▼──┐  │
+//                               └───┤ P │      │  │
+//                       new element ├───┘  ┌───┤  │
+//                    to be inserted │      │ N ├──┘
+//                                   └──────┴───┘
+//
 void list_insert_element(list_t *list, element_t *new, char *after) {
   element_t *e;
   e = list->first;
@@ -141,4 +164,8 @@ void list_loop(list_t *list, loop_fun_t fun, loop_order_t order,
       e = e->prev;
   } while (e);
 }
+
+
+
+
 
