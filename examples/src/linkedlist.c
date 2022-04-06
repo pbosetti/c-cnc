@@ -4,13 +4,26 @@
 //  | |___| | | | |   <  __/ (_| | | | \__ \ |_
 //  |_____|_|_| |_|_|\_\___|\__,_| |_|_|___/\__|
 // Lesson of March 6th, 2022
+// Compile with clang src/linkedlist.c -o linkedlist
+// Also see https://en.wikipedia.org/wiki/Linked_list
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+// The list is a chain of structures linked with twin pointers:
+//         ┌───┬──────┐     ┌───┬──────┐     ┌───┬──────┐
+// NULL ◄──┤PRV│      │◄────┤ P │      │◄────┤ P │      │
+//         ├───┘  ┌───┤     ├───┘  ┌───┤     ├───┘  ┌───┤
+//         │      │NXT├────►│      │ N ├────►│      │ N ├──► NULL
+//         └──────┴───┘     └──────┴───┘     └──────┴───┘
+// So, strictly speaking we are implemting a doubly linked list
+// A singly linked list would be simpler, but it can only be travelled
+// forward.
+
 // structure representing an object in the list
 typedef struct element {
   char *id;
+  // possibly more fields in here!
   struct element *next;
   struct element *prev;
 } element_t;
@@ -20,14 +33,6 @@ typedef struct {
   element_t *first, *last;
   size_t length;
 } list_t;
-
-// The list is a chain of structures linked with twin pointers:
-//         ┌───┬──────┐     ┌───┬──────┐     ┌───┬──────┐
-// NULL ◄──┤PRV│      │◄────┤ P │      │◄────┤ P │      │
-//         ├───┘  ┌───┤     ├───┘  ┌───┤     ├───┘  ┌───┤
-//         │      │NXT├────►│      │ N ├────►│      │ N ├──► NULL
-//         └──────┴───┘     └──────┴───┘     └──────┴───┘
-
 
 // Create a new list with one element in it
 list_t *list_new(char *id) {
@@ -76,8 +81,6 @@ void list_append(list_t *list, char *id) {
 //         ├───┘  ┌───┤     ├───┘  ┌───┤     │ ├───┘  ┌───┤
 //         │      │NXT├────►│      │ N ├──┐  │ │      │ N ├──► NULL
 //         └──────┴───┘     └────▲─┴───┘  │  │ └───▲──┴───┘
-//                               │        │  │     │
-//                               │        │  │     │
 //                               │   ┌───┐▼──▼──┐  │
 //                               └───┤ P │      │  │
 //                       new element ├───┘  ┌───┤  │
