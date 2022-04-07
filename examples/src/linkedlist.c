@@ -20,6 +20,13 @@
 // A singly linked list would be simpler, but it can only be travelled
 // forward.
 
+
+//   _____ _                           _   
+//  | ____| | ___ _ __ ___   ___ _ __ | |_ 
+//  |  _| | |/ _ \ '_ ` _ \ / _ \ '_ \| __|
+//  | |___| |  __/ | | | | |  __/ | | | |_ 
+//  |_____|_|\___|_| |_| |_|\___|_| |_|\__|
+
 // structure representing an object in the list
 typedef struct element {
   char *id;
@@ -28,6 +35,28 @@ typedef struct element {
   struct element *prev;
 } element_t;
 
+// Create a new element
+element_t *element_new(char *id) {
+  element_t *e = malloc(sizeof(element_t));
+  memset(e, 0, sizeof(element_t));
+  e->id = malloc(strlen(id) + 1);
+  strncpy(e->id, id, strlen(id));
+  return e;
+}
+
+// Free memory allocated for an element
+void element_free(element_t *e) {
+  free(e->id);
+  free(e);
+}
+
+
+//   _     _     _   
+//  | |   (_)___| |_ 
+//  | |   | / __| __|
+//  | |___| \__ \ |_ 
+//  |_____|_|___/\__|
+                  
 // structure representing the list itself
 typedef struct {
   element_t *first, *last;
@@ -38,17 +67,8 @@ typedef struct {
 list_t *list_new(char *id) {
   // allocate memory for the list
   list_t *l = malloc(sizeof(list_t));
-  // allocate memory for the element to be created
-  element_t *e = malloc(sizeof(element_t));
-  // if we are not sure that we are going to initialize all the fields
-  // of e, then it is safer to set everything to zero
-  memset(e, 0, sizeof(element_t));
-  // create a dynamically allocated copy of id and copy that to e->id
-  e->id = malloc(strlen(id) + 1);
-  strncpy(e->id, id, strlen(id));
-  // first element has nothing before and nothing after
-  e->next = NULL;
-  e->prev = NULL;
+  // create a new element
+  element_t *e = element_new(id);
   // initialize list fields
   l->first = e;
   l->last = e;
@@ -66,11 +86,10 @@ void list_append_element(list_t *list, element_t *e) {
 }
 
 // creating and appending a new element
-void list_append(list_t *list, char *id) {
-  element_t *e = malloc(sizeof(element_t));
-  e->id = malloc(strlen(id) + 1);
-  strncpy(e->id, id, strlen(id));
+element_t *list_append(list_t *list, char *id) {
+  element_t *e = element_new(id);
   list_append_element(list, e);
+  return e;
 }
 
 // inserting an existing element after a given ID
@@ -103,7 +122,11 @@ void list_insert_element(list_t *list, element_t *new, char *after) {
 }
 
 // creating and inserting a new element after a given ID
-void list_insert(list_t *list, char *id, char *after) {}
+element_t *list_insert(list_t *list, char *id, char *after) {
+  element_t *e = element_new(id);
+  list_insert_element(list, e, after);
+  return e;
+}
 
 // delete an element with a given ID
 void list_delete(list_t *list, char *id) {
@@ -113,8 +136,7 @@ void list_delete(list_t *list, char *id) {
     if (strcmp(e->id, id) == 0) { // id is found
       e->prev->next = e->next;
       e->next->prev = e->prev;
-      free(e->id); // free memory of removed element
-      free(e);
+      element_free(e);
       list->length--;
       break;
     }
@@ -128,8 +150,7 @@ void list_free(list_t *list) {
   do {
     // before freeing element e, take note of its next element
     next = e->next;
-    free(e->id);
-    free(e);
+    element_free(e);
   } while ((e = next));
   free(list);
 }
@@ -148,7 +169,7 @@ typedef void (*loop_fun_t)(element_t *e, loop_order_t o, void *userdata);
 // (a) is the return function
 // (b) is the name of the type
 // (c) is the function prototype, i.e. the list of arguments
-// any function passed as 2nd argument of list_loop() must adhere this 
+// any function passed as 2nd argument of list_loop() must adhere this
 // signature, i.e. return void and take arguments as in (a)
 
 // loop over all elements in the list in a given order, calling fun over
@@ -175,6 +196,71 @@ void list_loop(list_t *list, loop_fun_t fun, loop_order_t order,
 }
 
 
+//    ____      _ _ _                _        
+//   / ___|__ _| | | |__   __ _  ___| | _____ 
+//  | |   / _` | | | '_ \ / _` |/ __| |/ / __|
+//  | |__| (_| | | | |_) | (_| | (__|   <\__ \
+//   \____\__,_|_|_|_.__/ \__,_|\___|_|\_\___/
+// 
+// Loop callback 1: print an element and its pointers
+void print_element(element_t *e, loop_order_t o, void *userdata) {
+  printf("%10s: %15p -> %15p -> %15p\n", e->id, e->prev, e, e->next);
+}
+
+// Loop callback 2: Print and element and its order
+void print_element_with_index(element_t *e, loop_order_t o, void *userdata) {
+  size_t *i = (size_t *)userdata;
+  printf("list[%lu]: %s\n", *i, e->id);
+  if (o == ASC) {
+    (*i)++;
+  }
+  else {
+    (*i)--;
+  }
+}
 
 
+//   __  __       _       
+//  |  \/  | __ _(_)_ __  
+//  | |\/| |/ _` | | '_ \
+//  | |  | | (_| | | | | |
+//  |_|  |_|\__,_|_|_| |_|
+// 
+int main() {
+  char id[4][10] = {"one", "two", "three", "four"};
+  element_t *e;
+  size_t i;
 
+  // create a list
+  list_t *list = list_new("zero");
+
+  // populate the list with the other elements
+  for (i = 0; i < 4; i++) {
+    // create an element and append to the list
+    e = element_new(id[i]);
+    list_append_element(list, e);
+    // or, alternatively:
+    // list_append(list, id[i]);
+  }
+
+  // loop forward
+  list_loop(list, print_element, ASC, NULL);
+
+  // insert a new element
+  list_insert(list, "two.five", "two");
+
+  // loop backward
+  list_loop(list, print_element, DESC, NULL);
+
+  // print with index
+  i = 0;
+  list_loop(list, print_element_with_index, ASC, &i);
+
+  i = list->length - 1;
+  list_loop(list, print_element_with_index, DESC, &i);
+
+  // free memory
+  list_free(list);
+
+  return 0;
+}
