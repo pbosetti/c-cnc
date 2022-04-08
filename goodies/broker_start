@@ -1,0 +1,4 @@
+#!/bin/sh
+echo "Starting mosquitto broker..."
+docker run -d --name mosquitto --rm -p1883:1883 -v"${PWD}/mosquitto.conf:/mosquitto/config/mosquitto.conf" eclipse-mosquitto
+echo "Done."

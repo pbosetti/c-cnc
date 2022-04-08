@@ -39,29 +39,61 @@ I suggest to configure VS Code with the following settings. Open the settings fi
 It there are already other items in the JSON file, just add (don't replace) the above ones to the list (pay attention to separate each line with a comma and to put everithyng in between the outer curly braces).
 
 ## Prerequisites
+Regardless your platform, begin with installing Visual Studio Code. Then open a terminal and type the following to install commonly used VSCode extensions:
 
-The project must be built with a linux toolchain. On Windows, we are using a WSL2 environment with Ubuntu OS. To enable the compilation we need to install a few packages: on the linux console, type:
-
-```bash
-sudo apt install build-essential make cmake cmake-curses-gui clang clang-format lldb libgsl-dev ruby figlet
-sudo gem install gv_fsm
+```sh
 code --install-extension xaver.clang-format
 code --install-extension tintinweb.graphviz-interactive-preview
 code --install-extension canna.figlet
 code --install-extension Juancete.gcode-formatter
 code --install-extension vscode-gcode.gcode
+code --install-extension vadimcn.vscode-lldb
+```
+
+### 🪟 Windows (or 🐧 Ubuntu/Debian Linux)
+The project must be built with a linux toolchain. On Windows, we are using a WSL2 environment with Ubuntu OS. To enable the compilation we need to install a few packages: on the linux console, type:
+
+```bash
+sudo apt install build-essential make cmake cmake-curses-gui clang clang-format lldb libgsl-dev ruby figlet
+sudo gem install gv_fsm
 sudo update-alternatives --set c++ /usr/bin/clang++
 sudo update-alternatives --set cc /usr/bin/clang
+```
+
+### 🍎 MacOS
+You need to have Xcode installed: do that through the App Store and—once finished—launch Xcode and accept the licence terms. Then you can close it.
+
+On MacOS, the command equivalent to `apt` is `brew`: you have to install it by following the instructions on <https://brew.sh>, which means to type the following in the Terminal.app:
+
+```sh
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+Then **close the terminal** and open a new one and proceed as follows:
+
+```sh
+brew install figlet gsl clang-format graphviz gpg
+brew install --cask cmake
+curl -sSL https://rvm.io/mpapis.asc | gpg --import -
+curl -sSL https://rvm.io/pkuczynski.asc | gpg --import -
+curl -sSL https://get.rvm.io | bash -s stable --auto-dotfiles
+```
+
+Close and open a new terminal, again, then:
+
+```sh
+rvm install ruby-2.7
+gem install gv_fsm
 ```
 
 
 ## Build with Cmake
 
-Building a project with Cmake is a two-step process. The first step is called *configuration*, and it results in populating the `build` folder with all the contents needed for the compilation. The second step is called *compilation* and results in the products of the build to be created in the root of the `build` folder. There is an optional third step, *install*, that copies the build products into a destination folder. This project os configured to have the local `bin` forder as destination.
+Building a project with Cmake is a two-step process. The first step is called *configuration*, and it results in populating the `build` folder with all the contents needed for the compilation. The second step is called *compilation* and results in the products of the build to be created in the root of the `build` folder. There is an optional third step, *install*, that copies the build products into a destination folder. This project is configured to have the local `bin` forder as destination.
 
-1. (configuring) from the terminal, be sure to be in the project's toot directory and then issue the command `cmake	-Bbuild .`: this means configure the project in the `build` directory, searching for the `CMakeLists.txt` file in the current directory (that is `.`)
-3. (compilation) from the terminal, compile the project with the command `make -C build` 
-4. (optional install) if you want to install the build products, type `make -C build install`: this copies binaries into the `bin` and `lib` folders of the root project folder
+1. (configuring) from the terminal, be sure to be in the project's toot directory and then issue the command `cmake	-Bbuild`: this means configure the project in the `build` directory, searching for the `CMakeLists.txt` file in the current directory
+2. (compilation) from the terminal, compile the project with the command `make -C build` 
+3. (optional install) if you want to install the build products, type `make -C build install`: this copies binaries into the `bin` and `lib` folders of the root project folder
 
 **Note 1.**: the `cmake` command must be run the first time, and then every time that you create, move, or rename source files. Conversely, if you only change contents of source files, then you only need to `make`. The `make` command is smart enough not to recompile files that have been already compiled and that are unchanged from the previous build: this reduces a lot the compilation time for large projects. The option `-Cbuild` (the space is optional) tells make to work in the directory `build`.
 
