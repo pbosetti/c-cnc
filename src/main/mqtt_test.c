@@ -28,6 +28,14 @@
 #define INI_SECTION "MQTT"
 #define INI_FILE "settings.ini"
 
+#ifdef __linux__
+#define SIGRELOAD SIGUSR1
+#elif __APPLE__
+#define SIGRELOAD SIGINFO
+#else
+#error Unsupported platform
+#endif
+
 // Custom types
 typedef struct {
   char broker_addr[BUFLEN];
@@ -66,7 +74,7 @@ void sig_handler(int signal) {
   case SIGINT:
     siglongjmp(JumpBuffer, EXIT);
     break;
-  case SIGINFO:
+  case SIGRELOAD:
     siglongjmp(JumpBuffer, RESTART);
   default:
     break;
@@ -87,7 +95,7 @@ int main(int argc, char const *argv[]) {
   int rc = 0;
   char *buf = NULL;
 
-  signal(SIGINFO, sig_handler);
+  signal(SIGRELOAD, sig_handler);
   signal(SIGINT, sig_handler);
 start:
   rc = 0;
