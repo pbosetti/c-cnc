@@ -57,7 +57,9 @@ void block_print(block_t *block, FILE *out);
 
 data_t block_dt(block_t *block);
 
+data_t block_dtheta(block_t *block);
 
+point_t *block_center(block_t *block);
 
 
 
