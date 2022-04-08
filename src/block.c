@@ -312,7 +312,7 @@ int block_parse(block_t *block) {
 }
 
 // Calculate lambda value at a given time
-data_t block_lambda(block_t *b, data_t t) {
+data_t block_lambda(block_t *b, data_t t, data_t *v) {
   assert(b);
   data_t dt_1 = b->prof->dt_1;
   data_t dt_2 = b->prof->dt_2;
@@ -320,24 +320,30 @@ data_t block_lambda(block_t *b, data_t t) {
   data_t a = b->prof->a;
   data_t d = b->prof->d;
   data_t f = b->prof->f;
-  data_t r;
+  data_t r, _v;
 
   if (t < 0) { // negative time
     r = 0.0;
+    _v = 0.0;
   } else if (t < dt_1) { // acceleration
     r = a * pow(t, 2) / 2.0;
     r /= b->prof->l;
+    _v = a * t;
   } else if (t < (dt_1 + dt_m)) { // maintenance
     r = f * (dt_1 / 2.0 + (t - dt_1));
     r /= b->prof->l;
+    _v = f;
   } else if (t < (dt_1 + dt_m + dt_2)) { // deceleration
     data_t t_2 = dt_1 + dt_m;
     r = f * dt_1 / 2.0 + f * (dt_m + t - t_2) +
         d / 2.0 * (pow(t, 2) + pow(t_2, 2)) - d * t * t_2;
     r /= b->prof->l;
+    _v = f + d * (t - dt_1 - dt_m);
   } else { // after ending time
     r = 1.0;
+    _v = 0.0;
   }
+  if (v) *v = _v;
   return r;
 }
 

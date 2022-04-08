@@ -47,7 +47,7 @@ void block_free(block_t *block);
 int block_parse(block_t *block);
 
 // evaluate lambda function at a given time
-data_t block_lambda(block_t *block, data_t time);
+data_t block_lambda(block_t *block, data_t time, data_t *v);
 
 // interpolate motion on three axes at a given lambda value
 point_t *block_interpolate(block_t *block, data_t lambda);
