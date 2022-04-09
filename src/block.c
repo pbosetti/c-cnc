@@ -28,6 +28,7 @@ typedef struct block {
   point_t *center;       // Arc center
   data_t i, j, r;        // Arc positions
   data_t theta0, dtheta; // Arc angles
+  data_t acc;            // actual acceleration
   int ij;                // 1 if block uses I and J, 0 if it uses R
   block_profile_t *prof; // Velocity profile
   // Linked list pointers:
@@ -177,24 +178,23 @@ static int block_arc(block_t *b) {
 // compute velocity profile for the block
 static void block_compute(block_t *b) {
   assert(b);
-  data_t A, D, a, d;
+  data_t A, a, d;
   data_t dt, dt_1, dt_2, dt_m, dq;
   data_t f_m, l;
 
-  A = machine_A(b->config);
-  D = machine_D(b->config);
+  A = b->acc;
   f_m = b->feedrate / 60.0;
   l = b->length;
   dt_1 = f_m / A;
-  dt_2 = f_m / D;
+  dt_2 = f_m / A;
   dt_m = l / f_m - (dt_1 + dt_2) / 2.0;
   if (dt_m > 0) { // trapezoidal velocity profile
     dt = quantize(dt_1 + dt_2 + dt_m, machine_tq(b->config), &dq);
     dt_m += dq;
     f_m = (2 * l) / (dt_1 + dt_2 + 2 * dt_m);
   } else { // triangular velocity profile
-    dt_1 = sqrt(2 * l / (A + pow(A, 2) / D));
-    dt_2 = dt_1 * A / D;
+    dt_1 = sqrt(2 * l / (A + pow(A, 2) / A));
+    dt_2 = dt_1;
     dt = quantize(dt_1 + dt_2, machine_tq(b->config), &dq);
     dt_m = 0;
     dt_2 += dq;
@@ -250,6 +250,7 @@ block_t *block_new(char *line, block_t *prev, machine_t *cfg) {
   b->line = malloc(strlen(line) + 1);
   strcpy(b->line, line);
   b->config = cfg;
+  b->acc = machine_A(b->config);
   b->type = NO_MOTION;
   return b;
 }
@@ -301,7 +302,8 @@ int block_parse(block_t *block) {
     // centripetal acc = v^2/r (in mm/min)
     block->feedrate =
         MIN(block->feedrate, sqrt(machine_A(block->config) * block->r) * 60);
-    fprintf(stderr, "Curve feedrate: %f\n", block->feedrate);
+    block->acc /= sqrt(2);
+    // fprintf(stderr, "Curve feedrate: %f\n", block->feedrate);
     block_compute(block);
     break;
   default:

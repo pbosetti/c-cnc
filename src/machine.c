@@ -4,7 +4,7 @@
 
 
 typedef struct machine {
-  data_t A, D;
+  data_t A;
   data_t tq;
   data_t error;
   point_t *zero;
@@ -22,7 +22,6 @@ machine_t *machine_new(char *ini_path) {
       return NULL;
     }
     rc += ini_get_double(ini, "C-CNC", "A", &m->A);
-    rc += ini_get_double(ini, "C-CNC", "D", &m->D);
     rc += ini_get_double(ini, "C-CNC", "error", &m->error);
     rc += ini_get_double(ini, "C-CNC", "tq", &m->tq);
     rc += ini_get_double(ini, "C-CNC", "origin_x", &x);
@@ -41,7 +40,6 @@ machine_t *machine_new(char *ini_path) {
     }
   } else {
     m->A = 125;
-    m->D = 250;
     m->error = 0.005;
     m->tq = 0.005;
     m->zero = point_new();
@@ -60,8 +58,6 @@ void machine_free(machine_t *m) {
 }
 
 data_t machine_A(machine_t *m) { return m->A; }
-
-data_t machine_D(machine_t *m) { return m->D; }
 
 data_t machine_error(machine_t *m) { return m->error; }
 
