@@ -29,7 +29,6 @@ typedef struct block {
   data_t i, j, r;        // Arc positions
   data_t theta0, dtheta; // Arc angles
   data_t acc;            // actual acceleration
-  int ij;                // 1 if block uses I and J, 0 if it uses R
   block_profile_t *prof; // Velocity profile
   // Linked list pointers:
   struct block *next;    // This allows b->next->line
@@ -89,11 +88,9 @@ static int block_set_field(block_t *b, char cmd, char *arg) {
     break;
   case 'I':
     b->i = atol(arg);
-    b->ij = 1;
     break;
   case 'J':
     b->j = atol(arg);
-    b->ij = 1;
     break;
   case 'R':
     b->r = atol(arg);
@@ -111,7 +108,7 @@ static int block_set_field(block_t *b, char cmd, char *arg) {
     fprintf(stderr, "ERROR: Unexpected G-code command %c%s\n", cmd, arg);
     return 1;
   }
-  if (b->r && b->ij) {
+  if (b->r && (b->i || b->j)) {
     fprintf(stderr, "ERROR: Cannot mix R and IJ\n");
     return 1;
   } else {
@@ -131,18 +128,7 @@ static int block_arc(block_t *b) {
   yf = point_y(b->target);
   zf = point_z(b->target);
 
-  if (b->ij) { // R is not given
-    data_t r, r2;
-    r = hypot(b->i, b->j);
-    b->r = r;
-    xc = x0 + b->i;
-    yc = y0 + b->j;
-    r2 = hypot(xf - xc, yf - yc);
-    if (fabs(r - r2) > machine_error(b->config)) {
-      fprintf(stderr, "Arc endpoint mismatch (error %f)\n", r - r2);
-      return 1;
-    }
-  } else { // R is given
+  if (b->r) { // R is given
     data_t dx = point_x(b->delta);
     data_t dy = point_y(b->delta);
     data_t r = b->r;
@@ -157,6 +143,18 @@ static int block_arc(block_t *b) {
     xc = x0 + (dx - s * sq / dxy2) / 2.0;
     yc = y0 + dy / 2.0 + s * (dx * sq) / (2 * dy * dxy2);
   }
+  else { // R is not given
+    data_t r, r2;
+    r = hypot(b->i, b->j);
+    b->r = r;
+    xc = x0 + b->i;
+    yc = y0 + b->j;
+    r2 = hypot(xf - xc, yf - yc);
+    if (fabs(r - r2) > machine_error(b->config)) {
+      fprintf(stderr, "Arc endpoint mismatch (error %f)\n", r - r2);
+      return 1;
+    }
+  } 
 
   point_set_x(b->center, xc);
   point_set_y(b->center, yc);
@@ -236,7 +234,7 @@ block_t *block_new(char *line, block_t *prev, machine_t *cfg) {
   }
 
   // reset, non-modal!
-  b->i = b->j = b->ij = b->r = 0.0;
+  b->i = b->j = b->r = 0.0;
 
   // fields that must be calculated
   b->length = 0.0;
@@ -264,6 +262,8 @@ void block_free(block_t *block) {
     free(block->prof);
   point_free(block->target);
   point_free(block->delta);
+  point_free(block->center);
+  
   free(block);
 }
 
