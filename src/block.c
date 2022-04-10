@@ -120,7 +120,6 @@ static int block_arc(block_t *b) {
   // we need center, radius, arc, and length
   data_t x0, y0, z0, xc, yc, xf, yf, zf;
   point_t *p0 = point_zero(b);
-  int arcsgn = (b->type == ARC_CCW ? 1 : -1);
   x0 = point_x(p0);
   y0 = point_y(p0);
   z0 = point_z(p0);
@@ -139,7 +138,7 @@ static int block_arc(block_t *b) {
     //      -1 |    +   |   -
     //      +1 |    -   |   +
     int s = (r > 0) - (r < 0);
-    s *= arcsgn;
+    s *= (b->type == ARC_CCW ? 1 : -1);
     xc = x0 + (dx - s * sq / dxy2) / 2.0;
     yc = y0 + dy / 2.0 + s * (dx * sq) / (2 * dy * dxy2);
   }
@@ -263,7 +262,7 @@ void block_free(block_t *block) {
   point_free(block->target);
   point_free(block->delta);
   point_free(block->center);
-  
+
   free(block);
 }
 
