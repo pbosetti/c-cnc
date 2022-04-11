@@ -94,7 +94,7 @@ endif()
 # expect all sources in /src, except mains
 set(SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/src)
 file(GLOB LIB_SOURCES_CPP "${SOURCE_DIR}/*.cpp")
-file(GLOB LIB_SOURCES "${SOURCE_DIR}/*.{c,h}")
+file(GLOB LIB_SOURCES "${SOURCE_DIR}/*.c")
 # generate defines.h
 configure_file(
   ${SOURCE_DIR}/defines.h.in
