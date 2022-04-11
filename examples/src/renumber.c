@@ -5,8 +5,9 @@
 //  |_| \_\___|_| |_|\__,_|_| |_| |_|_.__/ \___|_|   
 //  Read a Gcode file and normalize its N commands
 //  Also, capitalize all commands and remove leading whitespaces
+//  Compile as clang src/renumber.c -lm -o renumber
 //  This program is designed to work as a filter:
-//  cat gcode.txt | renumber - | c-cnc -
+//  cat -e gcode.txt | renumber - | c-cnc -
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -29,9 +30,8 @@ int main(int argc, char const *argv[]) {
 
   // command line parsing
   if (argc == 1) { // brief help
-    char this[MAXPATHLEN];
-    basename_r(argv[0], this);
-    printf("Usage: %s [filename | -], where '-' means standard input\n", this);
+    char *this = strdup(argv[0]);
+    printf("Usage: %s [filename | -], where '-' means standard input\n", basename(this));
     return 0;
   }
   else if (argc == 2) {
@@ -85,12 +85,17 @@ int main(int argc, char const *argv[]) {
     while ((word = strsep(&line, " ")) != NULL) {
       if (word[0] == ';') {
         // trailing comment: attach the remaining and skip to next line
-        snprintf(newline, newline_len, "%s %s %s", newline, word, line);
+        // snprintf(newline, newline_len, "%s %s %s", newline, word, line);
+        strncat(newline, " ", newline_len);
+        strncat(newline, word, newline_len);
+        strncat(newline, line, newline_len);
         break;
       }
       else if (toupper(word[0]) != 'N') {
         word[0] = toupper(word[0]);
-        snprintf(newline, newline_len, "%s %s", newline, word);
+        strncat(newline, " ", newline_len);
+        strncat(newline, word, newline_len);
+        // snprintf(newline, newline_len, "%s %s", newline, word);
       }
     }
     free(to_free);
