@@ -12,7 +12,7 @@ typedef struct machine {
 } machine_t;
 
 machine_t *machine_new(char *ini_path) {
-  machine_t *m = calloc(sizeof(machine_t), 1);
+  machine_t *m = (machine_t *)calloc(sizeof(machine_t), 1);
   if (ini_path) {
     void *ini = ini_init(ini_path);
     data_t x, y, z;

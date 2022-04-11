@@ -110,11 +110,9 @@ configure_file(
 add_executable(ini_test ${SOURCE_DIR}/main/ini_test.c)
 add_executable(mqtt_test ${SOURCE_DIR}/main/mqtt_test.c)
 add_executable(mqtt_stress ${SOURCE_DIR}/main/mqtt_stress.c)
-add_executable(block ${SOURCE_DIR}/main/block.c)
 
 list(APPEND TARGETS_LIST
   ini_test
-  block
   mqtt_test
   mqtt_stress
 )
@@ -127,7 +125,6 @@ if(IS_ARM) # X-build: use static libraries
 else() # Native build: use shared libraries
   add_library(${PROJECT_NAME}_shared SHARED ${LIB_SOURCES} ${LIB_SOURCES_CPP})
   target_link_libraries(ini_test ${PROJECT_NAME}_shared)
-  target_link_libraries(block ${PROJECT_NAME}_shared)
   target_link_libraries(mqtt_test ${PROJECT_NAME}_shared mosquitto)
   target_link_libraries(mqtt_stress ${PROJECT_NAME}_shared mosquitto)
   list(APPEND TARGETS_LIST ${PROJECT_NAME}_shared)

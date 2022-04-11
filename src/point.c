@@ -8,7 +8,7 @@ typedef struct point {
 } point_t;
 
 point_t *point_new() {
-  point_t *p = malloc(sizeof(point_t));
+  point_t *p = (point_t *)malloc(sizeof(point_t));
   memset(p, 0, sizeof(point_t));
   return p;
 }
