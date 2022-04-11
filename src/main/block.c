@@ -24,11 +24,11 @@ int main() {
 
   block_print(b1, stderr);
   block_print(b2, stderr);
-  printf("t lambda f x y z\n");
+  printf("t,lambda,f,x,y,z\n");
   // for (t = 0; t <= block_dt(b2); t += machine_tq(cfg)) {
   //   lambda = block_lambda(b2, t, &f);
   //   p = block_interpolate(b2, lambda);
-  //   printf("%f %f %f %f %f %f\n", t, lambda, f, point_x(p), point_y(p), point_z(p));
+  //   printf("%f,%f,%f,%f,%f,%f\n", t, lambda, f, point_x(p), point_y(p), point_z(p));
   // }
 
   b3 = block_new("N30 g02 I100 j0 x200 y200", b2, cfg);
@@ -38,7 +38,7 @@ int main() {
   for (t = 0; t <= block_dt(b3); t += machine_tq(cfg)) {
     lambda = block_lambda(b3, t, &f);
     p = block_interpolate(b3, lambda);
-    printf("%f %f %f %f %f %f\n", t, lambda, f, point_x(p), point_y(p), point_z(p));
+    printf("%f,%f,%f,%f,%f,%f\n", t, lambda, f, point_x(p), point_y(p), point_z(p));
   }
   block_print(b3, stderr);
 
