@@ -19,11 +19,13 @@
 // Initial buffer size, it will increase if lines are longer
 #define INI_BUFSIZE 128
 
+int _global = 10;
+
 int main(int argc, char const *argv[]) {
   FILE *fp;
-  int n = 1;
+  register int n = 1;
+  static int var = 1;
   size_t buf_len = INI_BUFSIZE, newline_len = INI_BUFSIZE;
-  size_t needed;
   char *line = NULL, *word = NULL, *to_free = NULL;
   char *buffer = calloc(sizeof(char), buf_len);
   char *newline = calloc(sizeof(char), newline_len);
