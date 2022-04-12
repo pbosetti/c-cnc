@@ -8,6 +8,13 @@
 #include <assert.h>
 #include <ctype.h>
 
+//   ____            _                 _   _                 
+//  |  _ \  ___  ___| | __ _ _ __ __ _| |_(_) ___  _ __  ___ 
+//  | | | |/ _ \/ __| |/ _` | '__/ _` | __| |/ _ \| '_ \/ __|
+//  | |_| |  __/ (__| | (_| | | | (_| | |_| | (_) | | | \__ \
+//  |____/ \___|\___|_|\__,_|_|  \__,_|\__|_|\___/|_| |_|___/
+                                                          
+// STRUCTS =====================================================================
 typedef struct {
   data_t a, d;             // aceleration and deceleration
   data_t f, l;             // feedrate and length
@@ -36,179 +43,26 @@ typedef struct block {
   machine_t *config;
 } block_t;
 
-//   ____       _            _
-//  |  _ \ _ __(_)_   ____ _| |_ ___
-//  | |_) | '__| \ \ / / _` | __/ _ \
-//  |  __/| |  | |\ V / (_| | ||  __/
-//  |_|   |_|  |_| \_/ \__,_|\__\___|
-// Static, or private, functions
-// are only accessible from within this file
+// PRIVATE FUNCTIONS ===========================================================
 
 // quantize a time interval as a multiple of the sampling time
 // tq; put the difference in dq
-static data_t quantize(data_t t, data_t tq, data_t *dq) {
-  data_t q;
-  q = ((size_t)(t / tq) + 1) * tq;
-  *dq = q - t;
-  return q;
-}
+static data_t quantize(data_t t, data_t tq, data_t *dq);
 
 // returns a valid point for the previous block: origin if the previous
 // block is undefined
-static point_t *point_zero(block_t *b) {
-  point_t *p0;
-  if (b->prev == NULL) {
-    p0 = point_new();
-    point_set_xyz(p0, 0, 0, 0);
-  } else {
-    p0 = b->prev->target;
-  }
-  return p0;
-}
+static point_t *point_zero(block_t *b);
 
 // set individual fields for a G-code word, made by a command
 // (single letter) and an argument (number as a string)
-static int block_set_field(block_t *b, char cmd, char *arg) {
-  assert(b);
-  switch (cmd) {
-  case 'N':
-    b->n = atol(arg);
-    break;
-  case 'G':
-    b->type = (block_type_t)atoi(arg);
-    break;
-  case 'X':
-    point_set_x(b->target, atof(arg));
-    break;
-  case 'Y':
-    point_set_y(b->target, atof(arg));
-    break;
-  case 'Z':
-    point_set_z(b->target, atof(arg));
-    break;
-  case 'I':
-    b->i = atol(arg);
-    break;
-  case 'J':
-    b->j = atol(arg);
-    break;
-  case 'R':
-    b->r = atol(arg);
-    break;
-  case 'F':
-    b->feedrate = atof(arg);
-    break;
-  case 'S':
-    b->spindle = atof(arg);
-    break;
-  case 'T':
-    b->tool = atoi(arg);
-    break;
-  default:
-    fprintf(stderr, "ERROR: Unexpected G-code command %c%s\n", cmd, arg);
-    return 1;
-  }
-  if (b->r && (b->i || b->j)) {
-    fprintf(stderr, "ERROR: Cannot mix R and IJ\n");
-    return 1;
-  } else {
-    return 0;
-  }
-}
+static int block_set_field(block_t *b, char cmd, char *arg);
 
-static int block_arc(block_t *b) {
-  // we need center, radius, arc, and length
-  data_t x0, y0, z0, xc, yc, xf, yf, zf;
-  point_t *p0 = point_zero(b);
-  x0 = point_x(p0);
-  y0 = point_y(p0);
-  z0 = point_z(p0);
-  xf = point_x(b->target);
-  yf = point_y(b->target);
-  zf = point_z(b->target);
-
-  if (b->r) { // R is given
-    data_t dx = point_x(b->delta);
-    data_t dy = point_y(b->delta);
-    data_t r = b->r;
-    data_t dxy2 = pow(dx, 2) + pow(dy, 2);
-    data_t sq = sqrt(-pow(dy, 2) * dxy2 * (dxy2 - 4 * r * r));
-    // Signs table:
-    // sign(r) | CW(-1) | CCW(+1)
-    //      -1 |    +   |   -
-    //      +1 |    -   |   +
-    int s = (r > 0) - (r < 0);
-    s *= (b->type == ARC_CCW ? 1 : -1);
-    xc = x0 + (dx - s * sq / dxy2) / 2.0;
-    yc = y0 + dy / 2.0 + s * (dx * sq) / (2 * dy * dxy2);
-  }
-  else { // R is not given
-    data_t r, r2;
-    r = hypot(b->i, b->j);
-    b->r = r;
-    xc = x0 + b->i;
-    yc = y0 + b->j;
-    r2 = hypot(xf - xc, yf - yc);
-    if (fabs(r - r2) > machine_error(b->config)) {
-      fprintf(stderr, "Arc endpoint mismatch (error %f)\n", r - r2);
-      return 1;
-    }
-  } 
-
-  point_set_x(b->center, xc);
-  point_set_y(b->center, yc);
-  b->theta0 = atan2(y0 - yc, x0 - xc);
-  b->dtheta = atan2(yf - yc, xf - xc) - b->theta0;
-  // net angle: complement to 2PI if negative
-  if (b->dtheta < 0)
-    b->dtheta = 2 * M_PI + b->dtheta;
-  // if CCW, take the negative complement
-  if (b->type == ARC_CW)
-    b->dtheta = -(2 * M_PI - b->dtheta);
-  // helix length
-  b->length = hypot(zf - z0, b->dtheta * b->r);
-  // from now on, it's safer to drop the sign of radius
-  b->r = fabs(b->r);
-  return 0;
-}
+static int block_arc(block_t *b);
 
 // compute velocity profile for the block
-static void block_compute(block_t *b) {
-  assert(b);
-  data_t A, a, d;
-  data_t dt, dt_1, dt_2, dt_m, dq;
-  data_t f_m, l;
+static void block_compute(block_t *b);
 
-  A = b->acc;
-  f_m = b->feedrate / 60.0;
-  l = b->length;
-  dt_1 = f_m / A;
-  dt_2 = f_m / A;
-  dt_m = l / f_m - (dt_1 + dt_2) / 2.0;
-  if (dt_m > 0) { // trapezoidal velocity profile
-    dt = quantize(dt_1 + dt_2 + dt_m, machine_tq(b->config), &dq);
-    dt_m += dq;
-    f_m = (2 * l) / (dt_1 + dt_2 + 2 * dt_m);
-  } else { // triangular velocity profile
-    dt_1 = sqrt(2 * l / (A + pow(A, 2) / A));
-    dt_2 = dt_1;
-    dt = quantize(dt_1 + dt_2, machine_tq(b->config), &dq);
-    dt_m = 0;
-    dt_2 += dq;
-    f_m = 2 * l / (dt_1 + dt_2);
-  }
-  a = f_m / dt_1;
-  d = -(f_m / dt_2);
 
-  b->prof->dt_1 = dt_1;
-  b->prof->dt_m = dt_m;
-  b->prof->dt_2 = dt_2;
-  b->prof->a = a;
-  b->prof->d = d;
-  b->prof->f = f_m;
-  b->prof->dt = (b->type == RAPID ? 60 : dt);
-  b->prof->l = l;
-}
 
 //   ____        _     _ _
 //  |  _ \ _   _| |__ | (_) ___
@@ -394,6 +248,190 @@ data_t block_dtheta(block_t *block) { return block->dtheta; }
 point_t *block_center(block_t *block) { return block->center; }
 
 
+
+
+//   ____       _            _
+//  |  _ \ _ __(_)_   ____ _| |_ ___
+//  | |_) | '__| \ \ / / _` | __/ _ \
+//  |  __/| |  | |\ V / (_| | ||  __/
+//  |_|   |_|  |_| \_/ \__,_|\__\___|
+// Static, or private, functions
+// are only accessible from within this file
+
+// quantize a time interval as a multiple of the sampling time
+// tq; put the difference in dq
+static data_t quantize(data_t t, data_t tq, data_t *dq) {
+  data_t q;
+  q = ((size_t)(t / tq) + 1) * tq;
+  *dq = q - t;
+  return q;
+}
+
+// returns a valid point for the previous block: origin if the previous
+// block is undefined
+static point_t *point_zero(block_t *b) {
+  point_t *p0;
+  if (b->prev == NULL) {
+    p0 = point_new();
+    point_set_xyz(p0, 0, 0, 0);
+  } else {
+    p0 = b->prev->target;
+  }
+  return p0;
+}
+
+// set individual fields for a G-code word, made by a command
+// (single letter) and an argument (number as a string)
+static int block_set_field(block_t *b, char cmd, char *arg) {
+  assert(b);
+  switch (cmd) {
+  case 'N':
+    b->n = atol(arg);
+    break;
+  case 'G':
+    b->type = (block_type_t)atoi(arg);
+    break;
+  case 'X':
+    point_set_x(b->target, atof(arg));
+    break;
+  case 'Y':
+    point_set_y(b->target, atof(arg));
+    break;
+  case 'Z':
+    point_set_z(b->target, atof(arg));
+    break;
+  case 'I':
+    b->i = atol(arg);
+    break;
+  case 'J':
+    b->j = atol(arg);
+    break;
+  case 'R':
+    b->r = atol(arg);
+    break;
+  case 'F':
+    b->feedrate = atof(arg);
+    break;
+  case 'S':
+    b->spindle = atof(arg);
+    break;
+  case 'T':
+    b->tool = atoi(arg);
+    break;
+  default:
+    fprintf(stderr, "ERROR: Unexpected G-code command %c%s\n", cmd, arg);
+    return 1;
+  }
+  if (b->r && (b->i || b->j)) {
+    fprintf(stderr, "ERROR: Cannot mix R and IJ\n");
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+static int block_arc(block_t *b) {
+  // we need center, radius, arc, and length
+  data_t x0, y0, z0, xc, yc, xf, yf, zf;
+  point_t *p0 = point_zero(b);
+  x0 = point_x(p0);
+  y0 = point_y(p0);
+  z0 = point_z(p0);
+  xf = point_x(b->target);
+  yf = point_y(b->target);
+  zf = point_z(b->target);
+
+  if (b->r) { // R is given
+    data_t dx = point_x(b->delta);
+    data_t dy = point_y(b->delta);
+    data_t r = b->r;
+    data_t dxy2 = pow(dx, 2) + pow(dy, 2);
+    data_t sq = sqrt(-pow(dy, 2) * dxy2 * (dxy2 - 4 * r * r));
+    // Signs table:
+    // sign(r) | CW(-1) | CCW(+1)
+    //      -1 |    +   |   -
+    //      +1 |    -   |   +
+    int s = (r > 0) - (r < 0);
+    s *= (b->type == ARC_CCW ? 1 : -1);
+    xc = x0 + (dx - s * sq / dxy2) / 2.0;
+    yc = y0 + dy / 2.0 + s * (dx * sq) / (2 * dy * dxy2);
+  }
+  else { // R is not given
+    data_t r, r2;
+    r = hypot(b->i, b->j);
+    b->r = r;
+    xc = x0 + b->i;
+    yc = y0 + b->j;
+    r2 = hypot(xf - xc, yf - yc);
+    if (fabs(r - r2) > machine_error(b->config)) {
+      fprintf(stderr, "Arc endpoint mismatch (error %f)\n", r - r2);
+      return 1;
+    }
+  } 
+
+  point_set_x(b->center, xc);
+  point_set_y(b->center, yc);
+  b->theta0 = atan2(y0 - yc, x0 - xc);
+  b->dtheta = atan2(yf - yc, xf - xc) - b->theta0;
+  // net angle: complement to 2PI if negative
+  if (b->dtheta < 0)
+    b->dtheta = 2 * M_PI + b->dtheta;
+  // if CCW, take the negative complement
+  if (b->type == ARC_CW)
+    b->dtheta = -(2 * M_PI - b->dtheta);
+  // helix length
+  b->length = hypot(zf - z0, b->dtheta * b->r);
+  // from now on, it's safer to drop the sign of radius
+  b->r = fabs(b->r);
+  return 0;
+}
+
+// compute velocity profile for the block
+static void block_compute(block_t *b) {
+  assert(b);
+  data_t A, a, d;
+  data_t dt, dt_1, dt_2, dt_m, dq;
+  data_t f_m, l;
+
+  A = b->acc;
+  f_m = b->feedrate / 60.0;
+  l = b->length;
+  dt_1 = f_m / A;
+  dt_2 = f_m / A;
+  dt_m = l / f_m - (dt_1 + dt_2) / 2.0;
+  if (dt_m > 0) { // trapezoidal velocity profile
+    dt = quantize(dt_1 + dt_2 + dt_m, machine_tq(b->config), &dq);
+    dt_m += dq;
+    f_m = (2 * l) / (dt_1 + dt_2 + 2 * dt_m);
+  } else { // triangular velocity profile
+    dt_1 = sqrt(2 * l / (A + pow(A, 2) / A));
+    dt_2 = dt_1;
+    dt = quantize(dt_1 + dt_2, machine_tq(b->config), &dq);
+    dt_m = 0;
+    dt_2 += dq;
+    f_m = 2 * l / (dt_1 + dt_2);
+  }
+  a = f_m / dt_1;
+  d = -(f_m / dt_2);
+
+  b->prof->dt_1 = dt_1;
+  b->prof->dt_m = dt_m;
+  b->prof->dt_2 = dt_2;
+  b->prof->a = a;
+  b->prof->d = d;
+  b->prof->f = f_m;
+  b->prof->dt = (b->type == RAPID ? 60 : dt);
+  b->prof->l = l;
+}
+
+
+
+//   _____ _____ ____ _____   __  __       _       
+//  |_   _| ____/ ___|_   _| |  \/  | __ _(_)_ __  
+//    | | |  _| \___ \ | |   | |\/| |/ _` | | '_ \
+//    | | | |___ ___) || |   | |  | | (_| | | | | |
+//    |_| |_____|____/ |_|   |_|  |_|\__,_|_|_| |_|
+//
 // compile with 
 // clang++ -std=c++17 src/point.c src/machine.c src/block.c src/inic.cpp -DBLOCK_MAIN -o block
 #ifdef BLOCK_MAIN
@@ -452,3 +490,4 @@ int main() {
   return 0;
 }
 #endif
+

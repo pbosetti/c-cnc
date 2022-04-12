@@ -96,8 +96,15 @@ void point_inspect(point_t *p, char **desc) {
   asprintf(desc, "[%s %s %s]", str_x, str_y, str_z);
 }
 
-#ifdef POINT_MAIN
 
+
+//   _____ _____ ____ _____   __  __       _       
+//  |_   _| ____/ ___|_   _| |  \/  | __ _(_)_ __  
+//    | | |  _| \___ \ | |   | |\/| |/ _` | | '_ \
+//    | | | |___ ___) || |   | |  | | (_| | | | | |
+//    |_| |_____|____/ |_|   |_|  |_|\__,_|_|_| |_|
+// 
+#ifdef POINT_MAIN
 int main() {
   point_t *p0, *p1, *p2;
   char *desc;
@@ -106,8 +113,8 @@ int main() {
   p2 = point_new();
 
   point_xyz(p0, 0, 0, 0);
-  point_x(p1, 100);
-  point_y(p1, 100);
+  point_set_x(p1, 100);
+  point_set_y(p1, 100);
   point_inspect(p1, &desc);
   printf("Initial:     %s\n", desc);
   point_modal(p0, p1);
