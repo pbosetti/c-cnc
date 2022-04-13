@@ -5,10 +5,16 @@
 #ifndef DEFINES_H
 #define DEFINES_H
 
+// Needed for asprintf
+#ifdef __linux__
+#define _GNU_SOURCE
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/param.h>
 #include <stdint.h>
+#include <math.h>
 
 typedef double data_t;
 
