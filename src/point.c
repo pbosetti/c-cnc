@@ -151,7 +151,7 @@ void point_inspect(point_t *p, char **desc) {
 //    | | | |___ ___) || |   | |  | | (_| | | | | |
 //    |_| |_____|____/ |_|   |_|  |_|\__,_|_|_| |_|
 // Only needed for testing purpose. To enable, compile as:
-// clang src/point.c -o point -DPOINT_MAIN
+// clang src/point.c -o point -lm -DPOINT_MAIN
 #ifdef POINT_MAIN
 int main() {
   point_t *p1, *p2, *p3;
