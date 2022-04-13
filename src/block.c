@@ -247,6 +247,8 @@ data_t block_dtheta(block_t *block) { return block->dtheta; }
 
 point_t *block_center(block_t *block) { return block->center; }
 
+data_t block_length(block_t *block) { return block->length; }
+
 
 
 
@@ -269,7 +271,7 @@ static data_t quantize(data_t t, data_t tq, data_t *dq) {
 
 // returns a valid point for the previous block: origin if the previous
 // block is undefined
-static point_t *point_zero(block_t *b) {
+static inline point_t *point_zero(block_t *b) {
   point_t *p0;
   if (b->prev == NULL) {
     p0 = point_new();
@@ -457,11 +459,11 @@ int main() {
 
   block_print(b1, stderr);
   block_print(b2, stderr);
-  printf("t,lambda,f,x,y,z\n");
+  printf("t,lambda,s,f,x,y,z\n");
   // for (t = 0; t <= block_dt(b2); t += machine_tq(cfg)) {
   //   lambda = block_lambda(b2, t, &f);
   //   p = block_interpolate(b2, lambda);
-  //   printf("%f,%f,%f,%f,%f,%f\n", t, lambda, f, point_x(p), point_y(p), point_z(p));
+  //   printf("%f,%f,%f,%f,%f,%f,%f\n", t, lambda, lambda * block_length(b2), f, point_x(p), point_y(p), point_z(p));
   // }
 
   b3 = block_new("N30 g02 I100 j0 x200 y200", b2, cfg);
@@ -471,7 +473,7 @@ int main() {
   for (t = 0; t <= block_dt(b3); t += machine_tq(cfg)) {
     lambda = block_lambda(b3, t, &f);
     p = block_interpolate(b3, lambda);
-    printf("%f,%f,%f,%f,%f,%f\n", t, lambda, f, point_x(p), point_y(p), point_z(p));
+    printf("%f,%f,%f,%f,%f,%f,%f\n", t, lambda, lambda * block_length(b3), f, point_x(p), point_y(p), point_z(p));
   }
   block_print(b3, stderr);
 

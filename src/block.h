@@ -61,6 +61,8 @@ data_t block_dtheta(block_t *block);
 
 point_t *block_center(block_t *block);
 
+data_t block_length(block_t *block);
+
 
 
 
