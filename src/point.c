@@ -72,29 +72,32 @@ void point_modal(point_t *from, point_t *to) {
   }
 }
 
+#define FIELD_LENGTH 8
 void point_inspect(point_t *p, char **desc) {
-  // local (on stack) temporary strings
-  char str_x[9], str_y[9], str_z[9];
-  // fill local strings with coords descriptions
-  if (p->s & X_SET) {
-    sprintf(str_x, "%08.3f", p->x);
-  } else {
-    sprintf(str_x, "%8s", "-");
+  char str_x[FIELD_LENGTH+1], str_y[FIELD_LENGTH+1], str_z[FIELD_LENGTH+1];
+  if (p->s & X_SET) { // defined
+    snprintf(str_x, FIELD_LENGTH, "%*.3f", FIELD_LENGTH, p->x);
   }
-  if (p->s & Y_SET) {
-    sprintf(str_y, "%08.3f", p->y);
-  } else {
-    sprintf(str_y, "%8s", "-");
+  else { // not defined
+    snprintf(str_x, FIELD_LENGTH, "%*s", FIELD_LENGTH, "-");
   }
-  if (p->s & Z_SET) {
-    sprintf(str_z, "%08.3f", p->z);
-  } else {
-    sprintf(str_z, "%8s", "-");
+
+  if (p->s & Y_SET) { // defined
+    snprintf(str_y, FIELD_LENGTH, "%*.3f", FIELD_LENGTH, p->y);
   }
-  // allocates on stack a string desc and prints into it
-  // the local strings
+  else { // not defined
+    snprintf(str_y, FIELD_LENGTH, "%*s", FIELD_LENGTH, "-");
+  }
+
+  if (p->s & Z_SET) { // defined
+    snprintf(str_z, FIELD_LENGTH, "%*.3f", FIELD_LENGTH, p->z);
+  }
+  else { // not defined
+    snprintf(str_z, FIELD_LENGTH, "%*s", FIELD_LENGTH, "-");
+  }
   asprintf(desc, "[%s %s %s]", str_x, str_y, str_z);
 }
+#undef FIELD_LENGTH
 
 
 
