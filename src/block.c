@@ -13,33 +13,37 @@
 //  | |_| |  __/ (__| | (_| | | | (_| | |_| | (_) | | | \__ \
 //  |____/ \___|\___|_|\__,_|_|  \__,_|\__|_|\___/|_| |_|___/
 
+// Trapezoidal velocity profile
 typedef struct {
-  data_t a;
-  data_t f, l;
-  data_t dt_1, dt_m, dt_2;
-  data_t dt;
+  data_t a;                // acceleration
+  data_t f, l;             // feedrate and length
+  data_t dt_1, dt_m, dt_2; // trapezoid times
+  data_t dt;               // total time
 } block_profile_t;
 
+// Block object structure
 typedef struct block {
-  char *line;
-  block_type_t type;
-  size_t n;
-  size_t tool;
-  data_t feedrate;
-  data_t spindle;
-  point_t *target;
-  point_t *delta;
-  point_t *center;
-  data_t length;
-  data_t i, j, r;
-  data_t theta0, dtheta;
-  data_t acc;
-  machine_t *machine;
-  block_profile_t *prof;
-  struct block *prev;
-  struct block *next;
+  char *line;            // G-code line
+  block_type_t type;     // type of block
+  size_t n;              // block number
+  size_t tool;           // tool number
+  data_t feedrate;       // feedrate
+  data_t spindle;        // spindle rate
+  point_t *target;       // destination point
+  point_t *delta;        // distance vector w.r.t. previous point
+  point_t *center;       // arc center (if it is an arc)
+  data_t length;         // total length
+  data_t i, j, r;        // center coordinates and radius (if it is an arc)
+  data_t theta0, dtheta; // arc initial angle and arc angle
+  data_t acc;            // actual acceleration
+  machine_t *machine;    // machine configuration
+  block_profile_t *prof; // velocity profile
+  struct block *prev;    // next block (linked list)
+  struct block *next;    // previous block
 } block_t;
 
+
+// STATIC FUNCTIONS (for internal use only)
 static int block_set_fields(block_t *b, char cmd, char *arg);
 
 
@@ -102,6 +106,11 @@ void block_free(block_t *b) {
   b = NULL;
 }
 
+void block_print(block_t *b, FILE *out) {}
+
+
+// ALGORITHMS
+
 // Parsing the G-code string. Returns an integer for success/failure
 int block_parse(block_t *b) {
   assert(b);
@@ -121,12 +130,12 @@ int block_parse(block_t *b) {
   free(tofree);
 }
 
+
 // Evaluate the value of lambda at a certaint time
 data_t block_lambda(const block_t *b, data_t time) {}
 
 point_t *block_interpolate(block_t *b, data_t lambda) {}
 
-void block_print(block_t *b, FILE *out) {}
 
 // GETTERS
 
@@ -151,7 +160,9 @@ point_t *block_center(const block_t *b) {
 //  \___ \| __/ _` | __| |/ __| | |_| | | | '_ \ / __|
 //   ___) | || (_| | |_| | (__  |  _| |_| | | | | (__ 
 //  |____/ \__\__,_|\__|_|\___| |_|  \__,_|_| |_|\___|
-                                                   
+// Definitions for the static functions declared above
+
+// Parse a single G-code word (cmd+arg)
 static int block_set_fields(block_t *b, char cmd, char *arg) {
   assert(b && arg);
   switch (cmd)
@@ -197,6 +208,15 @@ static int block_set_fields(block_t *b, char cmd, char *arg) {
 
 
 
+
+//   _____ _____ ____ _____   __  __       _       
+//  |_   _| ____/ ___|_   _| |  \/  | __ _(_)_ __  
+//    | | |  _| \___ \ | |   | |\/| |/ _` | | '_ \ 
+//    | | | |___ ___) || |   | |  | | (_| | | | | |
+//    |_| |_____|____/ |_|   |_|  |_|\__,_|_|_| |_|
+//
 #ifdef BLOCK_MAIN
-int main() {}
+int main() {
+  return 0;
+}
 #endif

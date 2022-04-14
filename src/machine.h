@@ -11,7 +11,7 @@
 #include "defines.h"
 #include "point.h"
 
-// opaque struct
+// Opaque struct
 typedef struct machine machine_t;
 
 // Lifecycle

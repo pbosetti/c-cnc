@@ -15,6 +15,8 @@ typedef struct machine {
 
 // Lifecycle
 
+// Create a new instance reading data from an INI file
+// If the INI file is not given (NULL), provide sensible default values
 machine_t *machine_new(const char *ini_path) {
   machine_t *m = (machine_t *)calloc(1, sizeof(machine_t));
   if (!m) {
