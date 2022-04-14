@@ -52,7 +52,7 @@ void point_set_x(point_t *p, data_t x) {
 }
 
 // xxxx xxxx Initial p->s value (unknown)
-// 0000 0010 Char value of 1: '\2'
+// 0000 0010 Char value of 2: '\2'
 // --------- bitwise or
 // xxxx xx1x Result
 void point_set_y(point_t *p, data_t y) {
@@ -62,7 +62,7 @@ void point_set_y(point_t *p, data_t y) {
 }
 
 // xxxx xxxx Initial p->s value (unknown)
-// 0000 0100 Char value of 1: '\2'
+// 0000 0100 Char value of 4: '\4'
 // --------- bitwise or
 // xxxx x1xx Result (x means "either 0 or 1")
 void point_set_z(point_t *p, data_t z) {
@@ -72,7 +72,7 @@ void point_set_z(point_t *p, data_t z) {
 }
 
 // xxxx xxxx Initial p->s value (unknown)
-// 0000 0111 Char value of 1: '\2'
+// 0000 0111 Char value of 7: '\7'
 // --------- bitwise or
 // xxxx x111 Result (x means "either 0 or 1")
 void point_set_xyz(point_t *p, data_t x, data_t y, data_t z) {
