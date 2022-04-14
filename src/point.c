@@ -24,11 +24,16 @@ typedef struct point {
 point_t *point_new() {
   // calloc also initializes the memory to 0!
   point_t *p = (point_t *)calloc(1, sizeof(point_t));
+  if (!p) {
+    perror("Error creating a point");
+    exit(EXIT_FAILURE);
+  } 
   return p;
 }
 
 // Free the memory
 void point_free(point_t *p) {
+  assert(p);
   free(p);
   p = NULL;
 }
@@ -46,6 +51,7 @@ void point_free(point_t *p) {
 // --------- bitwise or
 // xxxx xxx1 Result
 void point_set_x(point_t *p, data_t x) {
+  assert(p);
   p->x = x;
   // | is the bitwise or, & is the bitwise and
   p->s = p->s | X_SET;
@@ -56,6 +62,7 @@ void point_set_x(point_t *p, data_t x) {
 // --------- bitwise or
 // xxxx xx1x Result
 void point_set_y(point_t *p, data_t y) {
+  assert(p);
   p->y = y;
   // | is the bitwise or, & is the bitwise and
   p->s |= Y_SET; // like in a = a + 1 => a += 1
@@ -66,6 +73,7 @@ void point_set_y(point_t *p, data_t y) {
 // --------- bitwise or
 // xxxx x1xx Result (x means "either 0 or 1")
 void point_set_z(point_t *p, data_t z) {
+  assert(p);
   p->z = z;
   // | is the bitwise or, & is the bitwise and
   p->s |= Z_SET; // like in a = a + 1 => a += 1
@@ -76,6 +84,7 @@ void point_set_z(point_t *p, data_t z) {
 // --------- bitwise or
 // xxxx x111 Result (x means "either 0 or 1")
 void point_set_xyz(point_t *p, data_t x, data_t y, data_t z) {
+  assert(p);
   p->x = x;
   p->y = y;
   p->z = z;
@@ -83,12 +92,13 @@ void point_set_xyz(point_t *p, data_t x, data_t y, data_t z) {
 }
 
 // GETTERS
-data_t point_x(point_t *p) { return p->x; }
-data_t point_y(point_t *p) { return p->y; }
-data_t point_z(point_t *p) { return p->z; }
+data_t point_x(const point_t *p) { assert(p); return p->x; }
+data_t point_y(const point_t *p) { assert(p); return p->y; }
+data_t point_z(const point_t *p) { assert(p); return p->z; }
 
 // distance between two points
-data_t point_dist(point_t *from, point_t *to) {
+data_t point_dist(const point_t *from, const point_t *to) {
+  assert(from && to);
   return sqrt(
     pow(to->x - from->x, 2) +
     pow(to->y - from->y, 2) +
@@ -97,13 +107,15 @@ data_t point_dist(point_t *from, point_t *to) {
 }
 
 // Projections
-void point_delta(point_t *from, point_t *to, point_t *delta) {
+void point_delta(const point_t *from, const point_t *to, point_t *delta) {
+  assert(from && to && delta);
   point_set_xyz(delta, to->x - from->x, to->y - from->y, to->z - from->z);
 }
 
 // Modal behavior: only import coordinates from previous point when these are
 // NOT DEFINED in current point and DEFINED in previous point
-void point_modal(point_t *from, point_t *to) {
+void point_modal(const point_t *from, point_t *to) {
+  assert(from && to);
   if (!(to->s & X_SET) && (from->s & X_SET)) {
     point_set_x(to, from->x);
   }
@@ -118,30 +130,36 @@ void point_modal(point_t *from, point_t *to) {
 // Write into desc a description of a point
 // desc is automatically allocated to the right size.
 // it is CALLER RESPONSIBILITY TO FREE desc
-void point_inspect(point_t *p, char **desc) {
-  char str_x[9], str_y[9], str_z[9];
+#define FIELD_LENGTH 8
+void point_inspect(const point_t *p, char **desc) {
+  assert(p);
+  char str_x[FIELD_LENGTH+1], str_y[FIELD_LENGTH+1], str_z[FIELD_LENGTH+1];
   if (p->s & X_SET) { // defined
-    sprintf(str_x, "%8.3f", p->x);
+    snprintf(str_x, sizeof(str_x), "%*.3f", FIELD_LENGTH, p->x);
   }
   else { // not defined
-    sprintf(str_x, "%8s", "-");
+    snprintf(str_x, sizeof(str_x), "%*s", FIELD_LENGTH, "-");
   }
 
   if (p->s & Y_SET) { // defined
-    sprintf(str_y, "%8.3f", p->y);
+    snprintf(str_y, sizeof(str_y), "%*.3f", FIELD_LENGTH, p->y);
   }
   else { // not defined
-    sprintf(str_y, "%8s", "-");
+    snprintf(str_y, sizeof(str_y), "%*s", FIELD_LENGTH, "-");
   }
 
   if (p->s & Z_SET) { // defined
-    sprintf(str_z, "%8.3f", p->z);
+    snprintf(str_z, sizeof(str_z), "%*.3f", FIELD_LENGTH, p->z);
   }
   else { // not defined
-    sprintf(str_z, "%8s", "-");
+    snprintf(str_z, sizeof(str_z), "%*s", FIELD_LENGTH, "-");
   }
-  asprintf(desc, "[%s %s %s]", str_x, str_y, str_z);
+  if (asprintf(desc, "[%s %s %s]", str_x, str_y, str_z) == -1) {
+    perror("Could not create point description string");
+    exit(EXIT_FAILURE);
+  }
 }
+#undef FIELD_LENGTH
 
 
 
@@ -160,6 +178,7 @@ int main() {
   p1 = point_new();
   p2 = point_new();
   p3 = point_new();
+  
   // Set first point to origin
   point_set_xyz(p1, 0, 0, 0);
   // Only set Z and Y of second point

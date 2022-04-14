@@ -39,24 +39,24 @@ void point_set_z(point_t *p, data_t val);
 void point_set_xyz(point_t *p, data_t x, data_t y, data_t z);
 
 // GETTERS
-data_t point_x(point_t *p);
-data_t point_y(point_t *p);
-data_t point_z(point_t *p);
+data_t point_x(const point_t *p);
+data_t point_y(const point_t *p);
+data_t point_z(const point_t *p);
 
 // Distance between two points
-data_t point_dist(point_t *from, point_t *to);
+data_t point_dist(const point_t *from, const point_t *to);
 
 // Projections
-void point_delta(point_t *from, point_t *to, point_t *delta);
+void point_delta(const point_t *from, const point_t *to, point_t *delta);
 
 // Inspection
 // WARNING: desc is internally allocated, remember to free() it 
 // when done!!!
-void point_inspect(point_t *p, char **desc);
+void point_inspect(const point_t *p, char **desc);
 
 // "Modal behavior": a point may have undefined coordinates and if so it
 // must be able ti inherit undefined coordinates from the previous point
-void point_modal(point_t *from, point_t *to);
+void point_modal(const point_t *from, point_t *to);
 
 
 #endif // POINT_H

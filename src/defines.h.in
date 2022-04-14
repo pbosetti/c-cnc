@@ -15,6 +15,7 @@
 #include <sys/param.h>
 #include <stdint.h>
 #include <math.h>
+#include <assert.h>
 
 typedef double data_t;
 
