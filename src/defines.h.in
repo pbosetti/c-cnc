@@ -5,14 +5,35 @@
 #ifndef DEFINES_H
 #define DEFINES_H
 
+// Needed for asprintf
+#ifdef __linux__
+#define _GNU_SOURCE
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/param.h>
 #include <stdint.h>
 #include <math.h>
-#include <string.h>
+#include <assert.h>
+#include <time.h>
 
 typedef double data_t;
+
+// Utilites
+
+// Measuring execution time intervals: each time it is called, it returns
+// the delay to the previous call. Remember to call it once for initializing
+// internal timer.
+// It is declared as static inline, so calling it is quick (inline) and 
+// it is file-local (different files, different timers). 
+// Consequently, it must be defined in header.
+static inline double tictoc() {
+  static struct timespec ts = {.tv_sec = 0, .tv_nsec = 0};
+  double prev = ts.tv_sec + ts.tv_nsec / 1.0E9;
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+  return ts.tv_sec + ts.tv_nsec / 1.0E9 - prev;
+}
 
 // Cmake-generated values:
 #define VERSION "@VERSION@"
