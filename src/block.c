@@ -249,7 +249,7 @@ point_t *block_center(block_t *block) { return block->center; }
 
 data_t block_length(block_t *block) { return block->length; }
 
-
+block_t *block_next(block_t *block) { return block->next; }
 
 
 //   ____       _            _

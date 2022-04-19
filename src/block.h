@@ -63,6 +63,7 @@ point_t *block_center(block_t *block);
 
 data_t block_length(block_t *block);
 
+block_t *block_next(block_t *block);
 
 
 
