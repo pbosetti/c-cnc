@@ -98,8 +98,11 @@ block_t *block_new(char *line, block_t *prev, machine_t *cfg) {
   b->prof = (block_profile_t *)malloc(sizeof(block_profile_t));
   assert(b->prof);
   // copy line to b->line
-  b->line = (char *)malloc(strlen(line) + 1);
-  strcpy(b->line, line);
+  b->line = strdup(line);
+  if (!b->line) {
+    perror("Cannot allocate memory for line");
+    exit(EXIT_FAILURE);
+  }
   b->config = cfg;
   b->acc = machine_A(b->config);
   b->type = NO_MOTION;
@@ -406,7 +409,7 @@ static void block_compute(block_t *b) {
     dt_m += dq;
     f_m = (2 * l) / (dt_1 + dt_2 + 2 * dt_m);
   } else { // triangular velocity profile
-    dt_1 = sqrt(2 * l / (A + pow(A, 2) / A));
+    dt_1 = sqrt(l / A);
     dt_2 = dt_1;
     dt = quantize(dt_1 + dt_2, machine_tq(b->config), &dq);
     dt_m = 0;
