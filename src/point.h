@@ -1,7 +1,7 @@
-//   ____       _       _
-//  |  _ \ ___ (_)_ __ | |_
+//   ____       _       _   
+//  |  _ \ ___ (_)_ __ | |_ 
 //  | |_) / _ \| | '_ \| __|
-//  |  __/ (_) | | | | | |_
+//  |  __/ (_) | | | | | |_ 
 //  |_|   \___/|_|_| |_|\__|
 //  Point class
 #ifndef POINT_H
@@ -9,25 +9,27 @@
 
 #include "defines.h"
 
-// We are using a bitmask for encoding the coordinates that are left
-// undefined.
-// 0000 0000 => none set (0)
-// 0000 0001 => x is set (1)
-// 0000 0010 => y is set (2)
-// 0000 0100 => z is set (3)
-// 0000 0111 => xyz set (7)
+//   _____                      
+//  |_   _|   _ _ __   ___  ___ 
+//    | || | | | '_ \ / _ \/ __|
+//    | || |_| | |_) |  __/\__ \
+//    |_| \__, | .__/ \___||___/
+//        |___/|_|              
 
+// Object class defined as an OPAQUE STRUCT
 typedef struct point point_t;
 
-//   _____                 _   _
-//  |  ___|   _ _ __   ___| |_(_) ___  _ __  ___
+
+//   _____                 _   _                 
+//  |  ___|   _ _ __   ___| |_(_) ___  _ __  ___ 
 //  | |_ | | | | '_ \ / __| __| |/ _ \| '_ \/ __|
 //  |  _|| |_| | | | | (__| |_| | (_) | | | \__ \
 //  |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
-
+                                              
 // Create a point
 point_t *point_new();
 
+// Free the memory
 void point_free(point_t *p);
 
 // Set coordinates
@@ -36,21 +38,25 @@ void point_set_y(point_t *p, data_t val);
 void point_set_z(point_t *p, data_t val);
 void point_set_xyz(point_t *p, data_t x, data_t y, data_t z);
 
-data_t point_x(point_t *p);
-data_t point_y(point_t *p);
-data_t point_z(point_t *p);
+// GETTERS
+data_t point_x(const point_t *p);
+data_t point_y(const point_t *p);
+data_t point_z(const point_t *p);
 
 // Distance between two points
-data_t point_dist(point_t *from, point_t *to);
+data_t point_dist(const point_t *from, const point_t *to);
 
-// projections
-void point_delta(point_t *from, point_t *to, point_t *delta);
+// Projections
+void point_delta(const point_t *from, const point_t *to, point_t *delta);
 
 // Inspection
-void point_inspect(point_t *p, char **desc);
+// WARNING: desc is internally allocated, remember to free() it 
+// when done!!!
+void point_inspect(const point_t *p, char **desc);
 
 // "Modal behavior": a point may have undefined coordinates and if so it
 // must be able ti inherit undefined coordinates from the previous point
-void point_modal(point_t *from, point_t *to);
+void point_modal(const point_t *from, point_t *to);
+
 
 #endif // POINT_H
