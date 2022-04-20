@@ -6,6 +6,7 @@
 
 #include "block.h"
 #include <string.h>
+#include <ctype.h>
 
 //   ____            _                 _   _
 //  |  _ \  ___  ___| | __ _ _ __ __ _| |_(_) ___  _ __  ___
@@ -15,7 +16,7 @@
 
 // Trapezoidal velocity profile
 typedef struct {
-  data_t a;                // acceleration
+  data_t a, d;             // acceleration
   data_t f, l;             // feedrate and length
   data_t dt_1, dt_m, dt_2; // trapezoid times
   data_t dt;               // total time
@@ -45,8 +46,10 @@ typedef struct block {
 
 // STATIC FUNCTIONS (for internal use only)
 static int block_set_fields(block_t *b, char cmd, char *arg);
-
-
+static point_t *point_zero(block_t *b);
+static void block_compute(block_t *b);
+static void block_arc(block_t *b);
+static data_t quantize(data_t t, data_t tq, data_t *dq);
 //   _____                 _   _
 //  |  ___|   _ _ __   ___| |_(_) ___  _ __  ___
 //  | |_ | | | | '_ \ / __| __| |/ _ \| '_ \/ __|
@@ -78,17 +81,22 @@ block_t *block_new(const char *line, block_t *prev, machine_t *cfg) {
   b->target = point_new();
   b->delta = point_new();
   b->center = point_new();
+
   // allocate memory for profile struct
   b->prof = (block_profile_t *)calloc(1, sizeof(block_profile_t));
   if (!b->prof) {
     perror("Error creating a profile structure");
     exit(EXIT_FAILURE);
   }
+
   b->machine = cfg;
   b->type = NO_MOTION;
   b->acc = machine_A(b->machine);
-  b->line = (char *)malloc(sizeof(line));
-  strcpy(b->line, line);
+  b->line = strdup(line);
+  if (! b->line) {
+    perror("Could not allocate memory");
+    exit(EXIT_FAILURE);
+  }
 
   return b;
 }
@@ -106,7 +114,20 @@ void block_free(block_t *b) {
   b = NULL;
 }
 
-void block_print(block_t *b, FILE *out) {}
+void block_print(block_t *b, FILE *out) {
+  assert(b && out);
+  char *start, *end;
+  // if this is the first block, p0 is the origin
+  // otherwise is the target of the previous block
+  point_t *p0 = point_zero(b);
+  // inspect origin and target points
+  point_inspect(p0, &start);
+  point_inspect(b->target, &end);
+  // print out block description
+  fprintf(out, "%03lu %s->%s F%7.1f S%7.1f T%2lu (%d)\n", b->n, start, end, b->feedrate, b->spindle, b->tool, b->type);
+  free(end);
+  free(start);
+}
 
 
 // ALGORITHMS
@@ -115,6 +136,8 @@ void block_print(block_t *b, FILE *out) {}
 int block_parse(block_t *b) {
   assert(b);
   char *word, *line, *tofree;
+  point_t *p0;
+  int rv = 0;
 
   tofree = line = strdup(b->line);
   if (!line) {
@@ -125,16 +148,49 @@ int block_parse(block_t *b) {
   while ((word = strsep(&line, " ")) != NULL) {
     // word[0] is the command
     // word+1 is the pointer to the argument as a string
-    block_set_fields(b, word[0], word + 1);
+    rv += block_set_fields(b, toupper(word[0]), word + 1);
   }
   free(tofree);
+
+  // inherit modal fields from the previous block
+  p0 = point_zero(b);
+  point_modal(p0, b->target);
+  point_delta(p0, b->target, b->delta);
+  b->length = point_dist(p0, b->target);
+  
+  // deal with motion blocks
+  switch (b->type) {
+  case LINE:
+    // calculate feed profile
+    block_compute(b);
+    break;
+  case ARC_CW:
+  case ARC_CCW:
+    // calculate arc coordinates
+    block_arc(b);
+    // set corrected feedrate and acceleration
+    b->feedrate = MIN(b->feedrate, sqrt(machine_A(b->machine) * b->r) * 60);
+    b->acc /= sqrt(2);
+    // calculate feed profile
+    block_compute(b);
+    break;
+  default:
+    break;
+  }
+  // return number of parsing errors
+  return rv;
 }
 
 
 // Evaluate the value of lambda at a certaint time
-data_t block_lambda(const block_t *b, data_t time) {}
+data_t block_lambda(const block_t *b, data_t time) {
+  return 0;
+}
 
-point_t *block_interpolate(block_t *b, data_t lambda) {}
+point_t *block_interpolate(block_t *b, data_t lambda) {
+  point_t *p = NULL;
+  return p;
+}
 
 
 // GETTERS
@@ -161,6 +217,72 @@ point_t *block_center(const block_t *b) {
 //   ___) | || (_| | |_| | (__  |  _| |_| | | | | (__ 
 //  |____/ \__\__,_|\__|_|\___| |_|  \__,_|_| |_|\___|
 // Definitions for the static functions declared above
+
+static data_t quantize(data_t t, data_t tq, data_t *dq) {
+  data_t q;
+  q = ((size_t)(t / tq) + 1) * tq;
+  *dq = q - t;
+  return q;
+}
+
+// calcultare the velocity profile
+static void block_compute(block_t *b) {
+  assert(b);
+  data_t A, a, d;
+  data_t dt, dt_1, dt_2, dt_m, dq;
+  data_t f_m, l;
+
+  A = b->acc;
+  f_m = b->feedrate / 60.0;
+  l = b->length;
+  dt_1 = f_m / A;
+  dt_2 = dt_1;
+  dt_m = l /f_m - (dt_1 + dt_2) / 2.0;
+  if (dt_m > 0) { // trapezoidal profile
+    dt = quantize(dt_1 + dt_m + dt_2, machine_tq(b->machine), &dq);
+    dt_m += dq; 
+    f_m = (2 * l) / (dt_1 + dt_2 + 2 * dt_m);
+  }
+  else { // triangular profile (short block)
+    dt_1 = sqrt(l / A);
+    dt_2 = dt_1;
+    dt = quantize(dt_1 + dt_2, machine_tq(b->machine), &dq);
+    dt_m = 0;
+    dt_2 += dq;
+    f_m = 2 * l / (dt_1 + dt_2);
+  }
+  a = f_m / dt_1;
+  d = -(f_m / dt_2);
+  // set calculated values in block object
+  b->prof->dt_1 = dt_1;
+  b->prof->dt_2 = dt_2;
+  b->prof->dt_m = dt_m;
+  b->prof->a = a;
+  b->prof->d = d;
+  b->prof->f = f_m;
+  b->prof->dt = dt;
+  b->prof->l = l;
+}
+
+// calculate the arc coordinates
+static void block_arc(block_t *b) {
+
+}
+
+static point_t *point_zero(block_t *b) {
+  assert(b);
+  // point_t *p0 = NULL;
+  // if (b->prev == NULL) {
+  //   p0 = machine_zero(b->machine);
+  // }
+  // else {
+  //   p0 = b->prev->target;
+  // }
+  // return p0;
+
+  // more compactly:
+  return b->prev ? b->prev->target : machine_zero(b->machine);
+}
 
 // Parse a single G-code word (cmd+arg)
 static int block_set_fields(block_t *b, char cmd, char *arg) {
@@ -200,10 +322,17 @@ static int block_set_fields(block_t *b, char cmd, char *arg) {
   case 'T':
     b->tool = atol(arg);   
     break;
-    
   default:
+    fprintf(stderr, "ERROR: Usupported G-code command %c%s\n", cmd, arg);
+    return 1;
     break;
   }
+  // cannot have R and IJ on the same block
+  if (b->r && (b->i || b->j)) {
+    fprintf(stderr, "ERROR: Cannot mix R and IJ\n");
+    return 1;
+  }
+  return 0;
 }
 
 
@@ -211,12 +340,29 @@ static int block_set_fields(block_t *b, char cmd, char *arg) {
 
 //   _____ _____ ____ _____   __  __       _       
 //  |_   _| ____/ ___|_   _| |  \/  | __ _(_)_ __  
-//    | | |  _| \___ \ | |   | |\/| |/ _` | | '_ \ 
+//    | | |  _| \___ \ | |   | |\/| |/ _` | | '_ \
 //    | | | |___ ___) || |   | |  | | (_| | | | | |
 //    |_| |_____|____/ |_|   |_|  |_|\__,_|_|_| |_|
 //
 #ifdef BLOCK_MAIN
 int main() {
+  block_t *b1 = NULL, *b2 = NULL, *b3 = NULL;
+  machine_t *cfg = machine_new(NULL);
+
+  b1 = block_new("N10 G00 X90 Y90 Z100 t3", NULL, cfg);
+  block_parse(b1);
+  b2 = block_new("N20 G01 Y100 X100 F1000 S2000", b1, cfg);
+  block_parse(b2);
+  b3 = block_new("N30 G01 Y200", b2, cfg);
+  block_parse(b3);
+
+  block_print(b1, stdout);
+  block_print(b2, stdout);
+  block_print(b3, stdout);
+
+  block_free(b1);
+  block_free(b2);
+  block_free(b3);
   return 0;
 }
 #endif
