@@ -162,6 +162,7 @@ int block_parse(block_t *b) {
   switch (b->type) {
   case LINE:
     // calculate feed profile
+    b->acc = machine_A(b->machine);
     block_compute(b);
     break;
   case ARC_CW:
@@ -169,8 +170,14 @@ int block_parse(block_t *b) {
     // calculate arc coordinates
     block_arc(b);
     // set corrected feedrate and acceleration
-    b->feedrate = MIN(b->feedrate, sqrt(machine_A(b->machine) * b->r) * 60);
-    b->acc /= sqrt(2);
+    // centripetal acc = f^2/r, must be <= A
+    // INI file gives A in mm/s^2, feedrate is given in mm/min
+    b->feedrate =
+        MIN(b->feedrate, sqrt(machine_A(b->machine) * b->r) * 60);
+    // tangential acceleration: when composed with centripetal one, total
+    // acceleration must be <= A
+    // a^2 <= A^2 - v^4/r^2
+    b->acc = sqrt(pow(machine_A(b->machine), 2) - pow(b->feedrate / 60, 4) / pow(b->r, 2));
     // calculate feed profile
     block_compute(b);
     break;
