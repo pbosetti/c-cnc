@@ -165,9 +165,12 @@ int block_parse(block_t *block) {
     block_arc(block);
     // centripetal acc = v^2/r (in mm/min)
     block->feedrate =
-        MIN(block->feedrate, sqrt(machine_A(block->machine) * block->r) * 60);
-    block->acc /= sqrt(2);
-    // fprintf(stderr, "Curve feedrate: %f\n", block->feedrate);
+        MIN(block->feedrate, sqrt(block->acc * block->r) * 60);
+    block->acc = sqrt(pow(block->acc, 2) - pow(block->feedrate / 60, 4) / pow(block->r, 2));
+    fprintf(stderr, "Curve: %f mm/min, %f mm/s^2 %f mm/s^2\n", 
+      block->feedrate, 
+      block->acc, 
+      pow(block->feedrate / 60, 2) / block->r);
     block_compute(block);
     break;
   default:
@@ -282,14 +285,8 @@ static data_t quantize(data_t t, data_t tq, data_t *dq) {
 // returns a valid point for the previous block: origin if the previous
 // block is undefined
 static inline point_t *point_zero(block_t *b) {
-  point_t *p0;
-  if (b->prev == NULL) {
-    p0 = point_new();
-    point_set_xyz(p0, 0, 0, 0);
-  } else {
-    p0 = b->prev->target;
-  }
-  return p0;
+  assert(b);
+  return b->prev ? b->prev->target : machine_zero(b->machine);
 }
 
 // set individual fields for a G-code word, made by a command
