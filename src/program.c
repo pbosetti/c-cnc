@@ -3,6 +3,15 @@
 #include "program.h"
 #include <string.h>
 
+
+typedef struct program {
+  char *filename; // file name
+  FILE *file;     // file handle
+  block_t *first, *last, *current;
+  size_t n;  // total number of blocks
+} program_t;
+
+
 program_t *program_new(const char *filename) {
   assert(filename);
   assert(strlen(filename) > 0);

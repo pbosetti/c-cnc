@@ -241,15 +241,15 @@ void block_print(block_t *b, FILE *out) {
   free(p);
 }
 
-data_t block_dt(block_t *block) { return block->prof->dt; }
+data_t block_dt(block_t *block) { assert(block); return block->prof->dt; }
 
-data_t block_dtheta(block_t *block) { return block->dtheta; }
+data_t block_dtheta(block_t *block) { assert(block); return block->dtheta; }
 
-point_t *block_center(block_t *block) { return block->center; }
+point_t *block_center(block_t *block) { assert(block); return block->center; }
 
-data_t block_length(block_t *block) { return block->length; }
+data_t block_length(block_t *block) { assert(block); return block->length; }
 
-block_t *block_next(block_t *block) { return block->next; }
+block_t *block_next(block_t *block) { assert(block); return block->next; }
 
 
 //   ____       _            _

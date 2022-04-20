@@ -11,12 +11,7 @@
 
 // data structures
 
-typedef struct {
-  char *filename; // file name
-  FILE *file;     // file handle
-  block_t *first, *last, *current;
-  size_t n;  // total number of blocks
-} program_t;
+typedef struct program program_t;
 
 
 //   _____                 _   _                 
