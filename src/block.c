@@ -40,7 +40,7 @@ typedef struct block {
   // Linked list pointers:
   struct block *next;    // This allows b->next->line
   struct block *prev;
-  machine_t *config;
+  machine_t *machine;
 } block_t;
 
 // PRIVATE FUNCTIONS ===========================================================
@@ -72,18 +72,18 @@ static void block_compute(block_t *b);
 // functions
 
 block_t *block_new(char *line, block_t *prev, machine_t *cfg) {
-  assert(line);
+  assert(line && cfg);
   block_t *b = (block_t *)calloc(sizeof(block_t), 1);
-  assert(b);
+  if (!b) {
+    perror("Error creating a block");
+    exit(EXIT_FAILURE);
+  }
 
   // memory setup
   if (prev) { // if there is a previous block
     memcpy(b, prev, sizeof(block_t));
     b->prev = prev;
     prev->next = b;
-  } else { // this is the first block
-    memset(b, 0, sizeof(block_t));
-    b->prev = NULL; // redundant
   }
 
   // reset, non-modal!
@@ -94,18 +94,23 @@ block_t *block_new(char *line, block_t *prev, machine_t *cfg) {
   b->target = point_new();
   b->delta = point_new();
   b->center = point_new();
+
   // allocate memory for referenced objects:
-  b->prof = (block_profile_t *)malloc(sizeof(block_profile_t));
-  assert(b->prof);
+  b->prof = (block_profile_t *)calloc(1, sizeof(block_profile_t));
+  if (!b->prof) {
+    perror("Error creating a profile structure");
+    exit(EXIT_FAILURE);
+  }
+
+  b->machine = cfg;
+  b->type = NO_MOTION;
+  b->acc = machine_A(b->machine);
   // copy line to b->line
   b->line = strdup(line);
   if (!b->line) {
     perror("Cannot allocate memory for line");
     exit(EXIT_FAILURE);
   }
-  b->config = cfg;
-  b->acc = machine_A(b->config);
-  b->type = NO_MOTION;
   return b;
 }
 
@@ -119,21 +124,24 @@ void block_free(block_t *block) {
   point_free(block->target);
   point_free(block->delta);
   point_free(block->center);
-
   free(block);
+  block = NULL;
 }
 
 int block_parse(block_t *block) {
   assert(block);
   char *line, *word, *to_free;
   point_t *p0;
-  int rv = EXIT_SUCCESS;
+  int rv = 0;
 
   // strsep changes the string on which it operates
   // so we make a copy of it. Also, keep track of the original copy
   // pointer so that at the end we can free it (to_free)
   to_free = line = strdup(block->line); // uses malloc internally
-
+  if (!line) {
+    perror("Error copying line");
+    exit(EXIT_FAILURE);
+  }
   // loop and split line into words
   while ((word = strsep(&line, " ")) != NULL) {
     // parse each word
@@ -157,7 +165,7 @@ int block_parse(block_t *block) {
     block_arc(block);
     // centripetal acc = v^2/r (in mm/min)
     block->feedrate =
-        MIN(block->feedrate, sqrt(machine_A(block->config) * block->r) * 60);
+        MIN(block->feedrate, sqrt(machine_A(block->machine) * block->r) * 60);
     block->acc /= sqrt(2);
     // fprintf(stderr, "Curve feedrate: %f\n", block->feedrate);
     block_compute(block);
@@ -228,20 +236,19 @@ point_t *block_interpolate(block_t *b, data_t lambda) {
 
 // print block description
 void block_print(block_t *b, FILE *out) {
-  assert(b);
-  assert(out);
+  assert(b && out);
+  char *start = NULL, *end = NULL;
   point_t *p0 = point_zero(b);
-  char *t, *p;
 
-  point_inspect(b->target, &t);
-  point_inspect(p0, &p);
+  point_inspect(p0, &start);
+  point_inspect(b->target, &end);
 
-  fprintf(out, "%03lu: %s -> %s F%7.1f S%7.1f T%2lu (%d)\n", b->n, p, t,
+  fprintf(out, "%03lu: %s -> %s F%7.1f S%7.1f T%2lu (%d)\n", b->n, start, end,
           b->feedrate, b->spindle, b->tool, b->type);
 
   // CRUCIAL!!! or you'll have memory leaks!
-  free(t);
-  free(p);
+  free(start);
+  free(end);
 }
 
 data_t block_dt(block_t *block) { assert(block); return block->prof->dt; }
@@ -368,7 +375,7 @@ static int block_arc(block_t *b) {
     xc = x0 + b->i;
     yc = y0 + b->j;
     r2 = hypot(xf - xc, yf - yc);
-    if (fabs(r - r2) > machine_error(b->config)) {
+    if (fabs(r - r2) > machine_error(b->machine)) {
       fprintf(stderr, "Arc endpoint mismatch (error %f)\n", r - r2);
       return 1;
     }
@@ -405,13 +412,13 @@ static void block_compute(block_t *b) {
   dt_2 = f_m / A;
   dt_m = l / f_m - (dt_1 + dt_2) / 2.0;
   if (dt_m > 0) { // trapezoidal velocity profile
-    dt = quantize(dt_1 + dt_2 + dt_m, machine_tq(b->config), &dq);
+    dt = quantize(dt_1 + dt_2 + dt_m, machine_tq(b->machine), &dq);
     dt_m += dq;
     f_m = (2 * l) / (dt_1 + dt_2 + 2 * dt_m);
   } else { // triangular velocity profile
     dt_1 = sqrt(l / A);
     dt_2 = dt_1;
-    dt = quantize(dt_1 + dt_2, machine_tq(b->config), &dq);
+    dt = quantize(dt_1 + dt_2, machine_tq(b->machine), &dq);
     dt_m = 0;
     dt_2 += dq;
     f_m = 2 * l / (dt_1 + dt_2);
