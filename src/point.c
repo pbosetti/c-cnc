@@ -23,6 +23,8 @@ void point_free(point_t *p) {
 #define Z_SET '\4'
 #define ALL_SET '\7'
 
+// The following code is very repetitive:
+#ifdef NOT_DRY
 void point_set_x(point_t *p, data_t value) {
   p->x = value;
   p->s = p->s | X_SET;
@@ -43,6 +45,24 @@ data_t point_x(point_t *p) { return p->x; }
 data_t point_y(point_t *p) { return p->y; }
 
 data_t point_z(point_t *p) { return p->z; }
+#else
+// DRY the code:
+#define point_accessor(axis, bitmask)               \
+  void point_set_##axis(point_t *p, data_t value) { \
+    assert(p);                                      \
+    p->axis = value;                                \
+    p->s |= bitmask;                                \
+  }                                                 \
+  data_t point_##axis(point_t *p) {                 \
+    assert(p);                                      \
+    return p->axis;                                 \
+  }
+
+point_accessor(x, X_SET)
+point_accessor(y, Y_SET)
+point_accessor(z, Z_SET)
+#endif
+
 
 void point_set_xyz(point_t *p, data_t x, data_t y, data_t z) {
   p->x = x;
