@@ -43,13 +43,13 @@ typedef struct block {
   struct block *next;    // previous block
 } block_t;
 
-
 // STATIC FUNCTIONS (for internal use only)
 static int block_set_fields(block_t *b, char cmd, char *arg);
 static point_t *point_zero(block_t *b);
 static void block_compute(block_t *b);
 static void block_arc(block_t *b);
 static data_t quantize(data_t t, data_t tq, data_t *dq);
+
 //   _____                 _   _
 //  |  ___|   _ _ __   ___| |_(_) ___  _ __  ___
 //  | |_ | | | | '_ \ / __| __| |/ _ \| '_ \/ __|
