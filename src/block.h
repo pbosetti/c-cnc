@@ -31,12 +31,14 @@ typedef enum {
 //  |  _|| |_| | | | | (__| |_| | (_) | | | \__ \
 //  |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
 
-// LIFECYCLE                                             
+// LIFECYCLE ===================================================================
+
 block_t *block_new(const char *line, block_t *prev, machine_t *cfg);
 void block_free(block_t *b);
 void block_print(block_t *b, FILE *out);
 
-// ALGORITHMS
+// ALGORITHMS ==================================================================
+
 // Parsing the G-code string. Returns an integer for success/failure
 int block_parse(block_t *b);
 
@@ -47,7 +49,8 @@ data_t block_lambda(const block_t *b, data_t time);
 point_t *block_interpolate(block_t *b, data_t lambda);
 
 
-// GETTERS
+// GETTERS =====================================================================
+
 data_t block_length(const block_t *b);
 data_t block_dtheta(const block_t *b);
 point_t *block_center(const block_t *b);

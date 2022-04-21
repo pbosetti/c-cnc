@@ -43,7 +43,7 @@ typedef struct block {
   struct block *next;    // previous block
 } block_t;
 
-// STATIC FUNCTIONS (for internal use only)
+// STATIC FUNCTIONS (for internal use only) ====================================
 static int block_set_fields(block_t *b, char cmd, char *arg);
 static point_t *point_zero(block_t *b);
 static void block_compute(block_t *b);
@@ -56,7 +56,8 @@ static data_t quantize(data_t t, data_t tq, data_t *dq);
 //  |  _|| |_| | | | | (__| |_| | (_) | | | \__ \
 //  |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
 
-// Lifecycle
+// LIFECYCLE ===================================================================
+
 block_t *block_new(const char *line, block_t *prev, machine_t *cfg) {
   assert(line && cfg); // prev is NULL if this is the first block
   block_t *b = (block_t *)calloc(1, sizeof(block_t));
@@ -130,7 +131,7 @@ void block_print(block_t *b, FILE *out) {
 }
 
 
-// ALGORITHMS
+// ALGORITHMS ==================================================================
 
 // Parsing the G-code string. Returns an integer for success/failure
 int block_parse(block_t *b) {
@@ -200,7 +201,7 @@ point_t *block_interpolate(block_t *b, data_t lambda) {
 }
 
 
-// GETTERS
+// GETTERS =====================================================================
 
 data_t block_length(const block_t *b) {
   assert(b);
@@ -225,6 +226,8 @@ point_t *block_center(const block_t *b) {
 //  |____/ \__\__,_|\__|_|\___| |_|  \__,_|_| |_|\___|
 // Definitions for the static functions declared above
 
+// Calculate the integer multiple of sampling time; also prvide the rounding
+// amount in dq
 static data_t quantize(data_t t, data_t tq, data_t *dq) {
   data_t q;
   q = ((size_t)(t / tq) + 1) * tq;
@@ -232,7 +235,7 @@ static data_t quantize(data_t t, data_t tq, data_t *dq) {
   return q;
 }
 
-// calcultare the velocity profile
+// Calcultare the velocity profile
 static void block_compute(block_t *b) {
   assert(b);
   data_t A, a, d;
@@ -271,11 +274,13 @@ static void block_compute(block_t *b) {
   b->prof->l = l;
 }
 
-// calculate the arc coordinates
+// Calculate the arc coordinates
 static void block_arc(block_t *b) {
 
 }
 
+// Return a reliable previous point, i.e. machine zero if this is the first 
+// block
 static point_t *point_zero(block_t *b) {
   assert(b);
   // point_t *p0 = NULL;
