@@ -50,7 +50,8 @@ void block_print(block_t *b, FILE *out);
 int block_parse(block_t *b);
 
 // Evaluate the value of lambda at a certaint time
-data_t block_lambda(const block_t *b, data_t time);
+// also return speed in the parameter v
+data_t block_lambda(const block_t *b, data_t time, data_t *v);
 
 // Interpolate lambda over three axes
 point_t *block_interpolate(block_t *b, data_t lambda);

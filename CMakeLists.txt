@@ -115,11 +115,13 @@ configure_file(
 add_executable(ini_test ${SOURCE_DIR}/main/ini_test.c)
 add_executable(mqtt_test ${SOURCE_DIR}/main/mqtt_test.c)
 add_executable(mqtt_stress ${SOURCE_DIR}/main/mqtt_stress.c)
+add_executable(c-cnc ${SOURCE_DIR}/main/c-cnc.c)
 
 list(APPEND TARGETS_LIST
   ini_test
   mqtt_test
   mqtt_stress
+  c-cnc
 )
 
 if(NATIVE) # Native build: use shared libraries
@@ -128,6 +130,7 @@ if(NATIVE) # Native build: use shared libraries
   target_link_libraries(ini_test ${PROJECT_NAME}_shared)
   target_link_libraries(mqtt_test ${PROJECT_NAME}_shared mosquitto)
   target_link_libraries(mqtt_stress ${PROJECT_NAME}_shared mosquitto)
+  target_link_libraries(c-cnc ${PROJECT_NAME}_shared m)
 else() # X-build: use static libraries
   add_library(${PROJECT_NAME}_static STATIC ${LIB_SOURCES} ${LIB_SOURCES_CPP})
   target_link_libraries(ini_test ${PROJECT_NAME}_static)

@@ -95,6 +95,11 @@ void point_inspect(const point_t *p, char **desc) {
 
 // ACCESSORS ===================================================================
 
+// D.R.Y. = Don't Repeat Youlself
+// rather than the first block of functions hereafter (which is full of
+// repetitions), we are using metaprogramming
+
+#ifdef NOT_DRY
 // SETTERS
 
 // xxxx xxxx Initial p->s value (unknown)
@@ -129,6 +134,32 @@ void point_set_z(point_t *p, data_t z) {
   // | is the bitwise or, & is the bitwise and
   p->s |= Z_SET; // like in a = a + 1 => a += 1
 }
+// GETTERS
+data_t point_x(const point_t *p) { assert(p); return p->x; }
+data_t point_y(const point_t *p) { assert(p); return p->y; }
+data_t point_z(const point_t *p) { assert(p); return p->z; }
+#else
+
+// Metaprogramming macro for DRYing the code
+#define point_accessor(axis, bitmask)              \
+  void point_set_##axis(point_t *p, data_t value) {\
+    assert(p);                                     \
+    p->axis = value;                               \
+    p->s |= bitmask;                               \
+  }                                                \
+  data_t point_##axis(const point_t *p) {          \
+    assert(p);                                     \
+    return p->axis;                                \
+  }
+
+// use the macro: each call is generating both getter and setter
+point_accessor(x, X_SET);
+point_accessor(y, Y_SET);
+point_accessor(z, Z_SET);
+
+#endif
+
+
 
 // xxxx xxxx Initial p->s value (unknown)
 // 0000 0111 Char value of 7: '\7'
@@ -142,10 +173,6 @@ void point_set_xyz(point_t *p, data_t x, data_t y, data_t z) {
   p->s = ALL_SET;
 }
 
-// GETTERS
-data_t point_x(const point_t *p) { assert(p); return p->x; }
-data_t point_y(const point_t *p) { assert(p); return p->y; }
-data_t point_z(const point_t *p) { assert(p); return p->z; }
 
 
 // COMPUTATION =================================================================
