@@ -57,6 +57,9 @@ elseif(APPLE)
   set(NATIVE TRUE)
   include_directories(/usr/local/include)
   link_directories(/usr/local/lib)
+  # on M1 Macs, brew uses different directories:
+  include_directories(/opt/homebrew/include)
+  link_directories(/opt/homebrew/lib)
 endif()
 
 if(NOT CMAKE_BUILD_TYPE)

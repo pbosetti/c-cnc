@@ -274,6 +274,10 @@ point_t *block_center(const block_t *b) {
   return b->center;
 }
 
+data_t block_dt(const block_t *b) {
+  assert(b);
+  return b->prof->dt;
+}
 
 //   ____  _        _   _         __                  
 //  / ___|| |_ __ _| |_(_) ___   / _|_   _ _ __   ___ 
