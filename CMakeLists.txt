@@ -12,6 +12,7 @@ cmake_minimum_required(VERSION 3.10)
 if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
   message(FATAL_ERROR "In-source builds not allowed! Create a build directory and run CMake from there.")
 endif()
+# This is dynamically updated in defines.h.in:
 set(VERSION "1.0")
 project(C-CNC VERSION ${VERSION} LANGUAGES C CXX)
 
@@ -85,6 +86,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED TRUE)
 # RPATH management
+# This embeds the relative path of the dynamic library into the executable
+# So that it can find the library across installations
+# If this is not given, the executable only searches the library in its same 
+# folder or in a system path (/usr/lib, /usr/local/lib)
 if (APPLE)
   set(CMAKE_INSTALL_RPATH "@executable_path/../lib")
 else()
@@ -117,17 +122,17 @@ list(APPEND TARGETS_LIST
   mqtt_stress
 )
 
-if(IS_ARM) # X-build: use static libraries
+if(NATIVE) # Native build: use shared libraries
+  add_library(${PROJECT_NAME}_shared SHARED ${LIB_SOURCES} ${LIB_SOURCES_CPP})
+  list(APPEND TARGETS_LIST ${PROJECT_NAME}_shared)
+  target_link_libraries(ini_test ${PROJECT_NAME}_shared)
+  target_link_libraries(mqtt_test ${PROJECT_NAME}_shared mosquitto)
+  target_link_libraries(mqtt_stress ${PROJECT_NAME}_shared mosquitto)
+else() # X-build: use static libraries
   add_library(${PROJECT_NAME}_static STATIC ${LIB_SOURCES} ${LIB_SOURCES_CPP})
   target_link_libraries(ini_test ${PROJECT_NAME}_static)
   target_link_libraries(mqtt_test ${PROJECT_NAME}_static mosquitto_static ssl crypto dl pthread)
   target_link_libraries(mqtt_stress ${PROJECT_NAME}_static mosquitto_static ssl crypto dl pthread)
-else() # Native build: use shared libraries
-  add_library(${PROJECT_NAME}_shared SHARED ${LIB_SOURCES} ${LIB_SOURCES_CPP})
-  target_link_libraries(ini_test ${PROJECT_NAME}_shared)
-  target_link_libraries(mqtt_test ${PROJECT_NAME}_shared mosquitto)
-  target_link_libraries(mqtt_stress ${PROJECT_NAME}_shared mosquitto)
-  list(APPEND TARGETS_LIST ${PROJECT_NAME}_shared)
 endif()
 
 #   _____           _        _ _ 

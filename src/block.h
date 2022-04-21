@@ -12,6 +12,13 @@
 #include "point.h"
 #include "machine.h"
 
+//   _____                      
+//  |_   _|   _ _ __   ___  ___ 
+//    | || | | | '_ \ / _ \/ __|
+//    | || |_| | |_) |  __/\__ \
+//    |_| \__, | .__/ \___||___/
+//        |___/|_|              
+
 // Opaque structure representing a G-code block
 typedef struct block block_t;
 

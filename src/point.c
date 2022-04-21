@@ -6,6 +6,13 @@
 
 #include "point.h"
 
+//   ____            _                 _   _                 
+//  |  _ \  ___  ___| | __ _ _ __ __ _| |_(_) ___  _ __  ___ 
+//  | | | |/ _ \/ __| |/ _` | '__/ _` | __| |/ _ \| '_ \/ __|
+//  | |_| |  __/ (__| | (_| | | | (_| | |_| | (_) | | | \__ \
+//  |____/ \___|\___|_|\__,_|_|  \__,_|\__|_|\___/|_| |_|___/
+                                                          
+
 // Point object struct
 // We are using a bitmask for encoding the coordinates that are left
 // undefined.
@@ -19,6 +26,19 @@ typedef struct point {
   uint8_t s;
 } point_t;
 
+// Mnemonics for bitmask settings
+#define X_SET '\1'
+#define Y_SET '\2'
+#define Z_SET '\4'
+#define ALL_SET '\7'
+
+//   _____                 _   _                 
+//  |  ___|   _ _ __   ___| |_(_) ___  _ __  ___ 
+//  | |_ | | | | '_ \ / __| __| |/ _ \| '_ \/ __|
+//  |  _|| |_| | | | | (__| |_| | (_) | | | \__ \
+//  |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
+                                              
+// LIFECYCLE ===================================================================
 
 // Create a new point
 point_t *point_new() {
@@ -38,11 +58,42 @@ void point_free(point_t *p) {
   p = NULL;
 }
 
-// Mnemonics for bitmask settings
-#define X_SET '\1'
-#define Y_SET '\2'
-#define Z_SET '\4'
-#define ALL_SET '\7'
+// Write into desc a description of a point
+// desc is automatically allocated to the right size.
+// it is CALLER RESPONSIBILITY TO FREE desc
+#define FIELD_LENGTH 8
+void point_inspect(const point_t *p, char **desc) {
+  assert(p);
+  char str_x[FIELD_LENGTH+1], str_y[FIELD_LENGTH+1], str_z[FIELD_LENGTH+1];
+  if (p->s & X_SET) { // defined
+    snprintf(str_x, sizeof(str_x), "%*.3f", FIELD_LENGTH, p->x);
+  }
+  else { // not defined
+    snprintf(str_x, sizeof(str_x), "%*s", FIELD_LENGTH, "-");
+  }
+
+  if (p->s & Y_SET) { // defined
+    snprintf(str_y, sizeof(str_y), "%*.3f", FIELD_LENGTH, p->y);
+  }
+  else { // not defined
+    snprintf(str_y, sizeof(str_y), "%*s", FIELD_LENGTH, "-");
+  }
+
+  if (p->s & Z_SET) { // defined
+    snprintf(str_z, sizeof(str_z), "%*.3f", FIELD_LENGTH, p->z);
+  }
+  else { // not defined
+    snprintf(str_z, sizeof(str_z), "%*s", FIELD_LENGTH, "-");
+  }
+  if (asprintf(desc, "[%s %s %s]", str_x, str_y, str_z) == -1) {
+    perror("Could not create point description string");
+    exit(EXIT_FAILURE);
+  }
+}
+#undef FIELD_LENGTH
+
+
+// ACCESSORS ===================================================================
 
 // SETTERS
 
@@ -96,6 +147,9 @@ data_t point_x(const point_t *p) { assert(p); return p->x; }
 data_t point_y(const point_t *p) { assert(p); return p->y; }
 data_t point_z(const point_t *p) { assert(p); return p->z; }
 
+
+// COMPUTATION =================================================================
+
 // distance between two points
 data_t point_dist(const point_t *from, const point_t *to) {
   assert(from && to);
@@ -127,39 +181,6 @@ void point_modal(const point_t *from, point_t *to) {
   }
 }
 
-// Write into desc a description of a point
-// desc is automatically allocated to the right size.
-// it is CALLER RESPONSIBILITY TO FREE desc
-#define FIELD_LENGTH 8
-void point_inspect(const point_t *p, char **desc) {
-  assert(p);
-  char str_x[FIELD_LENGTH+1], str_y[FIELD_LENGTH+1], str_z[FIELD_LENGTH+1];
-  if (p->s & X_SET) { // defined
-    snprintf(str_x, sizeof(str_x), "%*.3f", FIELD_LENGTH, p->x);
-  }
-  else { // not defined
-    snprintf(str_x, sizeof(str_x), "%*s", FIELD_LENGTH, "-");
-  }
-
-  if (p->s & Y_SET) { // defined
-    snprintf(str_y, sizeof(str_y), "%*.3f", FIELD_LENGTH, p->y);
-  }
-  else { // not defined
-    snprintf(str_y, sizeof(str_y), "%*s", FIELD_LENGTH, "-");
-  }
-
-  if (p->s & Z_SET) { // defined
-    snprintf(str_z, sizeof(str_z), "%*.3f", FIELD_LENGTH, p->z);
-  }
-  else { // not defined
-    snprintf(str_z, sizeof(str_z), "%*s", FIELD_LENGTH, "-");
-  }
-  if (asprintf(desc, "[%s %s %s]", str_x, str_y, str_z) == -1) {
-    perror("Could not create point description string");
-    exit(EXIT_FAILURE);
-  }
-}
-#undef FIELD_LENGTH
 
 
 
