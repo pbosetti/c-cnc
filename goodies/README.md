@@ -50,6 +50,26 @@ Now you can verify that the installation went fine with the command:
 mosquitto_sub --help
 ```
 
+If you get an error with loading shared libraries (and only in this case!) do the following:
+
+```sh
+cat /etc/ld.so.conf.d/libc.conf
+```
+
+If the output **does not contain** the path `/usr/local/lib`, then type:
+
+```sh
+echo "/usr/local/lib" | sudo tee -a /etc/ld.so.conf.d/libc.conf
+```
+
+Then (and in any case, even if the previous command **does report** `/usr/local/lib`) type:
+
+```sh
+sudo ldconfig
+```
+
+Now it should work.
+
 ### Installing `libmosquitto` on MacOS
 
 On MacOS, libmosquitto can be easily installed with the command:
