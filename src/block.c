@@ -264,6 +264,9 @@ typ block_##name(const block_t *b) { assert(b); return b->par; }
 block_getter(data_t, length, length);
 block_getter(data_t, dtheta, dtheta);
 block_getter(data_t, prof->dt, dt);
+block_getter(block_type_t, type, type);
+block_getter(char *, line, line);
+block_getter(size_t, n, n);
 block_getter(data_t, r, r);
 block_getter(point_t *, center, center);
 block_getter(block_t *, next, next);
