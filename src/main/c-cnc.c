@@ -61,3 +61,22 @@ int main(int argc, char const *argv[]) {
   machine_free(machine);
   return 0;
 }
+
+
+#if 0
+
+  program_t *p = program_new(argv[1]);
+  if (!p) {
+    exit(EXIT_FAILURE);
+  }
+
+  if (program_parse(p, machine) == EXIT_FAILURE) {
+    fprintf(stderr, "G-code error, exiting.\n");
+    exit(EXIT_FAILURE);
+  }
+
+  program_print(p, stdout);
+
+  program_free(p);
+
+#endif
