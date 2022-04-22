@@ -63,6 +63,7 @@ data_t block_length(const block_t *b);
 data_t block_dtheta(const block_t *b);
 data_t block_dt(const block_t *b);
 point_t *block_center(const block_t *b);
+data_t block_r(const block_t *b);
 
 
 

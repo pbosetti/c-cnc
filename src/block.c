@@ -125,7 +125,7 @@ void block_print(block_t *b, FILE *out) {
   point_inspect(p0, &start);
   point_inspect(b->target, &end);
   // print out block description
-  fprintf(out, "%03lu %s->%s F%7.1f S%7.1f T%2lu (%d)\n", b->n, start, end, b->feedrate, b->spindle, b->tool, b->type);
+  fprintf(out, "%03lu %s->%s F%7.1f S%7.1f T%2lu (G%02d)\n", b->n, start, end, b->feedrate, b->spindle, b->tool, b->type);
   free(end);
   free(start);
 }
@@ -224,10 +224,10 @@ data_t block_lambda(const block_t *b, data_t t, data_t *v) {
   }
   else {
     r = b->prof->l;
-    v = 0;
+    *v = 0;
   }
   r /= b->prof->l;
-
+  *v *= 60; // convert to mm/min
   return r;
 }
 
@@ -277,6 +277,11 @@ point_t *block_center(const block_t *b) {
 data_t block_dt(const block_t *b) {
   assert(b);
   return b->prof->dt;
+}
+
+data_t block_r(const block_t *b) {
+  assert(b);
+  return b->r;
 }
 
 //   ____  _        _   _         __                  
@@ -380,8 +385,8 @@ static int block_arc(block_t *b) {
   // we need the net angle so we take the 2PI complement if negative
   if (b->dtheta <0) 
     b->dtheta = 2 * M_PI + b->dtheta;
-  // if CCW, take the negative complement
-  if (b->type == ARC_CCW)
+  // if CW, take the negative complement
+  if (b->type == ARC_CW)
     b->dtheta = -(2 * M_PI - b->dtheta);
   //
   b->length = hypot(zf - z0, b->dtheta * b->r);
