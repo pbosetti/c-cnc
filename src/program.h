@@ -56,7 +56,7 @@ void program_reset(program_t *program);
 
 char *program_filename(const program_t *p);
 size_t program_length(const program_t *p);
-block_t *program_curent(const program_t *p);
+block_t *program_current(const program_t *p);
 block_t *program_first(const program_t *p);
 block_t *program_last(const program_t *p);
 
