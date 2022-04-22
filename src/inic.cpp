@@ -35,6 +35,10 @@ void *ini_init(const char *path) {
     return NULL;
 }
 
+void ini_free(void *ini) {
+  delete static_cast<inipp::Ini<char> *>(ini);
+}
+
 ini_get(double);
 ini_get(int);
 ini_get(uint64_t);

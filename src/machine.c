@@ -57,7 +57,7 @@ machine_t *machine_new(const char *ini_path) {
     rc += ini_get_double(ini, "C-CNC", "offset_z", &z);
     m->offset = point_new();
     point_set_xyz(m->offset, x, y, z);
-    free(ini);
+    ini_free(ini);
     if (rc > 0) {
       fprintf(stderr, "Missing/wrong %d config parameters\n", rc);
       return NULL;

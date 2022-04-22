@@ -55,6 +55,13 @@ extern "C" {
 void *ini_init(char const *path);
 
 /**
+ * @brief Delete object
+ * 
+ * @param ini an ini file object
+ */
+void ini_free(void *ini);
+
+/**
  * @brief Construct `ini_get_int(void *ini_p, char *section, char *field, int *val)`
  */
 declare_ini_get(int);
