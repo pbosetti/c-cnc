@@ -48,7 +48,7 @@ void program_print(const program_t *program, FILE *output);
 int program_parse(program_t *program, machine_t *cfg);
 
 // linked-list navigation functions
-void program_next(program_t *program);
+block_t *program_next(program_t *program);
 void program_reset(program_t *program);
 
 

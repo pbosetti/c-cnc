@@ -126,10 +126,11 @@ int program_parse(program_t *p, machine_t *cfg) {
 }
 
 // linked-list navigation functions
-void program_next(program_t *p) {
+block_t *program_next(program_t *p) {
   assert(p);
   if (p->current == NULL) p->current = p->first;
   else p->current = block_next(p->current);
+  return p->current;
 }
 
 void program_reset(program_t *p) {
