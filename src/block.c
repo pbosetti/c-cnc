@@ -259,30 +259,16 @@ point_t *block_interpolate(block_t *b, data_t lambda) {
 
 // GETTERS =====================================================================
 
-data_t block_length(const block_t *b) {
-  assert(b);
-  return b->length;
-}
+#define block_getter(typ, par, name) \
+typ block_##name(const block_t *b) { assert(b); return b->par; }
 
-data_t block_dtheta(const block_t *b) {
-  assert(b);
-  return b->dtheta;
-}
+block_getter(data_t, length, length);
+block_getter(data_t, dtheta, dtheta);
+block_getter(data_t, prof->dt, dt);
+block_getter(data_t, r, r);
+block_getter(point_t *, center, center);
 
-point_t *block_center(const block_t *b) {
-  assert(b);
-  return b->center;
-}
 
-data_t block_dt(const block_t *b) {
-  assert(b);
-  return b->prof->dt;
-}
-
-data_t block_r(const block_t *b) {
-  assert(b);
-  return b->r;
-}
 
 //   ____  _        _   _         __                  
 //  / ___|| |_ __ _| |_(_) ___   / _|_   _ _ __   ___ 

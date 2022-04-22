@@ -86,12 +86,12 @@ void machine_free(machine_t *m) {
 
 // ACCESSORS ===================================================================
 
-data_t machine_A(const machine_t *m) { assert(m); return m->A; }
+#define machine_getter(typ, par) \
+typ machine_##par(const machine_t *m) { assert(m); return m->par; }
 
-data_t machine_tq(const machine_t *m) { assert(m); return m->tq; }
+machine_getter(data_t, A);
+machine_getter(data_t, tq);
+machine_getter(data_t, error);
+machine_getter(point_t *, zero);
+machine_getter(point_t *, offset);
 
-point_t *machine_zero(const machine_t *m) { assert(m); return m->zero; }
-
-point_t *machine_offset(const machine_t *m) { assert(m); return m->offset; }
-
-data_t machine_error(const machine_t *m) { assert(m); return m->error; }
