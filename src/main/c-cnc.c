@@ -1,5 +1,6 @@
 #include "../defines.h"
 #include "../machine.h"
+#include "../program.h"
 #include "../block.c"
 #include "../point.c"
 
