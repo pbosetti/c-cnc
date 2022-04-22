@@ -4,17 +4,29 @@
 //  | |  | | (_| | (__| | | | | | | |  __/
 //  |_|  |_|\__,_|\___|_| |_|_|_| |_|\___|
 //
-
-
 #include "machine.h"
 #include "inic.h"
+
+//   ____            _                 _   _                 
+//  |  _ \  ___  ___| | __ _ _ __ __ _| |_(_) ___  _ __  ___ 
+//  | | | |/ _ \/ __| |/ _` | '__/ _` | __| |/ _ \| '_ \/ __|
+//  | |_| |  __/ (__| | (_| | | | (_| | |_| | (_) | | | \__ \
+//  |____/ \___|\___|_|\__,_|_|  \__,_|\__|_|\___/|_| |_|___/
+                                                          
 
 typedef struct machine {
   data_t A, tq, error;
   point_t *zero, *offset;
 } machine_t;
 
-// Lifecycle
+
+//   _____                 _   _                 
+//  |  ___|   _ _ __   ___| |_(_) ___  _ __  ___ 
+//  | |_ | | | | '_ \ / __| __| |/ _ \| '_ \/ __|
+//  |  _|| |_| | | | | (__| |_| | (_) | | | \__ \
+//  |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
+                                              
+// LIFECYCLE ===================================================================
 
 // Create a new instance reading data from an INI file
 // If the INI file is not given (NULL), provide sensible default values
@@ -29,7 +41,7 @@ machine_t *machine_new(const char *ini_path) {
     data_t x, y, z;
     int rc = 0;
     if (!ini) {
-      fprintf(stderr, "Cannot open INI file, exiting.\n");
+      fprintf(stderr, "Could not open the ini file %s\n", ini_path);
       return NULL;
     }
     rc += ini_get_double(ini, "C-CNC", "A", &m->A);
@@ -45,8 +57,9 @@ machine_t *machine_new(const char *ini_path) {
     rc += ini_get_double(ini, "C-CNC", "offset_z", &z);
     m->offset = point_new();
     point_set_xyz(m->offset, x, y, z);
-    if (rc) {
-      fprintf(stderr, "Missing %d config parameters!\n", rc);
+    free(ini);
+    if (rc > 0) {
+      fprintf(stderr, "Missing/wrong %d config parameters\n", rc);
       return NULL;
     }
   }
@@ -71,7 +84,7 @@ void machine_free(machine_t *m) {
 }
 
 
-// Getters
+// ACCESSORS ===================================================================
 
 data_t machine_A(const machine_t *m) { assert(m); return m->A; }
 

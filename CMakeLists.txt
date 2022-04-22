@@ -12,6 +12,7 @@ cmake_minimum_required(VERSION 3.10)
 if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
   message(FATAL_ERROR "In-source builds not allowed! Create a build directory and run CMake from there.")
 endif()
+# This is dynamically updated in defines.h.in:
 set(VERSION "1.0")
 project(C-CNC VERSION ${VERSION} LANGUAGES C CXX)
 
@@ -56,6 +57,9 @@ elseif(APPLE)
   set(NATIVE TRUE)
   include_directories(/usr/local/include)
   link_directories(/usr/local/lib)
+  # on M1 Macs, brew uses different directories:
+  include_directories(/opt/homebrew/include)
+  link_directories(/opt/homebrew/lib)
 endif()
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -85,6 +89,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED TRUE)
 # RPATH management
+# This embeds the relative path of the dynamic library into the executable
+# So that it can find the library across installations
+# If this is not given, the executable only searches the library in its same 
+# folder or in a system path (/usr/lib, /usr/local/lib)
 if (APPLE)
   set(CMAKE_INSTALL_RPATH "@executable_path/../lib")
 else()
@@ -110,24 +118,27 @@ configure_file(
 add_executable(ini_test ${SOURCE_DIR}/main/ini_test.c)
 add_executable(mqtt_test ${SOURCE_DIR}/main/mqtt_test.c)
 add_executable(mqtt_stress ${SOURCE_DIR}/main/mqtt_stress.c)
+add_executable(c-cnc ${SOURCE_DIR}/main/c-cnc.c)
 
 list(APPEND TARGETS_LIST
   ini_test
   mqtt_test
   mqtt_stress
+  c-cnc
 )
 
-if(IS_ARM) # X-build: use static libraries
+if(NATIVE) # Native build: use shared libraries
+  add_library(${PROJECT_NAME}_shared SHARED ${LIB_SOURCES} ${LIB_SOURCES_CPP})
+  list(APPEND TARGETS_LIST ${PROJECT_NAME}_shared)
+  target_link_libraries(ini_test ${PROJECT_NAME}_shared)
+  target_link_libraries(mqtt_test ${PROJECT_NAME}_shared mosquitto)
+  target_link_libraries(mqtt_stress ${PROJECT_NAME}_shared mosquitto)
+  target_link_libraries(c-cnc ${PROJECT_NAME}_shared m)
+else() # X-build: use static libraries
   add_library(${PROJECT_NAME}_static STATIC ${LIB_SOURCES} ${LIB_SOURCES_CPP})
   target_link_libraries(ini_test ${PROJECT_NAME}_static)
   target_link_libraries(mqtt_test ${PROJECT_NAME}_static mosquitto_static ssl crypto dl pthread)
   target_link_libraries(mqtt_stress ${PROJECT_NAME}_static mosquitto_static ssl crypto dl pthread)
-else() # Native build: use shared libraries
-  add_library(${PROJECT_NAME}_shared SHARED ${LIB_SOURCES} ${LIB_SOURCES_CPP})
-  target_link_libraries(ini_test ${PROJECT_NAME}_shared)
-  target_link_libraries(mqtt_test ${PROJECT_NAME}_shared mosquitto)
-  target_link_libraries(mqtt_stress ${PROJECT_NAME}_shared mosquitto)
-  list(APPEND TARGETS_LIST ${PROJECT_NAME}_shared)
 endif()
 
 #   _____           _        _ _ 

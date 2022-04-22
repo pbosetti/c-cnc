@@ -6,6 +6,13 @@
 
 #include "point.h"
 
+//   ____            _                 _   _                 
+//  |  _ \  ___  ___| | __ _ _ __ __ _| |_(_) ___  _ __  ___ 
+//  | | | |/ _ \/ __| |/ _` | '__/ _` | __| |/ _ \| '_ \/ __|
+//  | |_| |  __/ (__| | (_| | | | (_| | |_| | (_) | | | \__ \
+//  |____/ \___|\___|_|\__,_|_|  \__,_|\__|_|\___/|_| |_|___/
+                                                          
+
 // Point object struct
 // We are using a bitmask for encoding the coordinates that are left
 // undefined.
@@ -19,6 +26,19 @@ typedef struct point {
   uint8_t s;
 } point_t;
 
+// Mnemonics for bitmask settings
+#define X_SET '\1'
+#define Y_SET '\2'
+#define Z_SET '\4'
+#define ALL_SET '\7'
+
+//   _____                 _   _                 
+//  |  ___|   _ _ __   ___| |_(_) ___  _ __  ___ 
+//  | |_ | | | | '_ \ / __| __| |/ _ \| '_ \/ __|
+//  |  _|| |_| | | | | (__| |_| | (_) | | | \__ \
+//  |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
+                                              
+// LIFECYCLE ===================================================================
 
 // Create a new point
 point_t *point_new() {
@@ -36,115 +56,6 @@ void point_free(point_t *p) {
   assert(p);
   free(p);
   p = NULL;
-}
-
-// Mnemonics for bitmask settings
-#define X_SET '\1'
-#define Y_SET '\2'
-#define Z_SET '\4'
-#define ALL_SET '\7'
-
-// SETTERS
-#ifdef DRY
-#define point_accessor(axis, bitmask)               \
-  void point_set_##axis(point_t *p, data_t value) { \
-    assert(p);                                      \
-    p->axis = value;                                \
-    p->s |= bitmask;                                \
-  }                                                 \
-  data_t point_##axis(const point_t *p) {                 \
-    assert(p);                                      \
-    return p->axis;                                 \
-  }
-
-point_accessor(x, X_SET)
-point_accessor(y, Y_SET)
-point_accessor(z, Z_SET)
-
-#else 
-
-// xxxx xxxx Initial p->s value (unknown)
-// 0000 0001 Char value of 1: '\1'
-// --------- bitwise or
-// xxxx xxx1 Result
-void point_set_x(point_t *p, data_t x) {
-  assert(p);
-  p->x = x;
-  // | is the bitwise or, & is the bitwise and
-  p->s = p->s | X_SET;
-}
-
-// xxxx xxxx Initial p->s value (unknown)
-// 0000 0010 Char value of 2: '\2'
-// --------- bitwise or
-// xxxx xx1x Result
-void point_set_y(point_t *p, data_t y) {
-  assert(p);
-  p->y = y;
-  // | is the bitwise or, & is the bitwise and
-  p->s |= Y_SET; // like in a = a + 1 => a += 1
-}
-
-// xxxx xxxx Initial p->s value (unknown)
-// 0000 0100 Char value of 4: '\4'
-// --------- bitwise or
-// xxxx x1xx Result (x means "either 0 or 1")
-void point_set_z(point_t *p, data_t z) {
-  assert(p);
-  p->z = z;
-  // | is the bitwise or, & is the bitwise and
-  p->s |= Z_SET; // like in a = a + 1 => a += 1
-}
-
-// GETTERS
-data_t point_x(const point_t *p) { assert(p); return p->x; }
-data_t point_y(const point_t *p) { assert(p); return p->y; }
-data_t point_z(const point_t *p) { assert(p); return p->z; }
-
-#endif
-
-// xxxx xxxx Initial p->s value (unknown)
-// 0000 0111 Char value of 7: '\7'
-// --------- bitwise or
-// xxxx x111 Result (x means "either 0 or 1")
-void point_set_xyz(point_t *p, data_t x, data_t y, data_t z) {
-  assert(p);
-  p->x = x;
-  p->y = y;
-  p->z = z;
-  p->s = ALL_SET;
-}
-
-
-// distance between two points
-data_t point_dist(const point_t *from, const point_t *to) {
-  assert(from && to);
-  return sqrt(
-    pow(to->x - from->x, 2) +
-    pow(to->y - from->y, 2) +
-    pow(to->z - from->z, 2)
-  );
-}
-
-// Projections
-void point_delta(const point_t *from, const point_t *to, point_t *delta) {
-  assert(from && to && delta);
-  point_set_xyz(delta, to->x - from->x, to->y - from->y, to->z - from->z);
-}
-
-// Modal behavior: only import coordinates from previous point when these are
-// NOT DEFINED in current point and DEFINED in previous point
-void point_modal(const point_t *from, point_t *to) {
-  assert(from && to);
-  if (!(to->s & X_SET) && (from->s & X_SET)) {
-    point_set_x(to, from->x);
-  }
-  if (!(to->s & Y_SET) && (from->s & Y_SET)) {
-    point_set_y(to, from->y);
-  }
-  if (!(to->s & Z_SET) && (from->s & Z_SET)) {
-    point_set_z(to, from->z);
-  }
 }
 
 // Write into desc a description of a point
@@ -180,6 +91,123 @@ void point_inspect(const point_t *p, char **desc) {
   }
 }
 #undef FIELD_LENGTH
+
+
+// ACCESSORS ===================================================================
+
+// D.R.Y. = Don't Repeat Youlself
+// rather than the first block of functions hereafter (which is full of
+// repetitions), we are using metaprogramming
+
+#ifdef NOT_DRY
+// SETTERS
+
+// xxxx xxxx Initial p->s value (unknown)
+// 0000 0001 Char value of 1: '\1'
+// --------- bitwise or
+// xxxx xxx1 Result
+void point_set_x(point_t *p, data_t x) {
+  assert(p);
+  p->x = x;
+  // | is the bitwise or, & is the bitwise and
+  p->s = p->s | X_SET;
+}
+
+// xxxx xxxx Initial p->s value (unknown)
+// 0000 0010 Char value of 2: '\2'
+// --------- bitwise or
+// xxxx xx1x Result
+void point_set_y(point_t *p, data_t y) {
+  assert(p);
+  p->y = y;
+  // | is the bitwise or, & is the bitwise and
+  p->s |= Y_SET; // like in a = a + 1 => a += 1
+}
+
+// xxxx xxxx Initial p->s value (unknown)
+// 0000 0100 Char value of 4: '\4'
+// --------- bitwise or
+// xxxx x1xx Result (x means "either 0 or 1")
+void point_set_z(point_t *p, data_t z) {
+  assert(p);
+  p->z = z;
+  // | is the bitwise or, & is the bitwise and
+  p->s |= Z_SET; // like in a = a + 1 => a += 1
+}
+// GETTERS
+data_t point_x(const point_t *p) { assert(p); return p->x; }
+data_t point_y(const point_t *p) { assert(p); return p->y; }
+data_t point_z(const point_t *p) { assert(p); return p->z; }
+#else
+
+// Metaprogramming macro for DRYing the code
+#define point_accessor(axis, bitmask)              \
+  void point_set_##axis(point_t *p, data_t value) {\
+    assert(p);                                     \
+    p->axis = value;                               \
+    p->s |= bitmask;                               \
+  }                                                \
+  data_t point_##axis(const point_t *p) {          \
+    assert(p);                                     \
+    return p->axis;                                \
+  }
+
+// use the macro: each call is generating both getter and setter
+point_accessor(x, X_SET);
+point_accessor(y, Y_SET);
+point_accessor(z, Z_SET);
+
+#endif
+
+
+
+// xxxx xxxx Initial p->s value (unknown)
+// 0000 0111 Char value of 7: '\7'
+// --------- bitwise or
+// xxxx x111 Result (x means "either 0 or 1")
+void point_set_xyz(point_t *p, data_t x, data_t y, data_t z) {
+  assert(p);
+  p->x = x;
+  p->y = y;
+  p->z = z;
+  p->s = ALL_SET;
+}
+
+
+
+// COMPUTATION =================================================================
+
+// distance between two points
+data_t point_dist(const point_t *from, const point_t *to) {
+  assert(from && to);
+  return sqrt(
+    pow(to->x - from->x, 2) +
+    pow(to->y - from->y, 2) +
+    pow(to->z - from->z, 2)
+  );
+}
+
+// Projections
+void point_delta(const point_t *from, const point_t *to, point_t *delta) {
+  assert(from && to && delta);
+  point_set_xyz(delta, to->x - from->x, to->y - from->y, to->z - from->z);
+}
+
+// Modal behavior: only import coordinates from previous point when these are
+// NOT DEFINED in current point and DEFINED in previous point
+void point_modal(const point_t *from, point_t *to) {
+  assert(from && to);
+  if (!(to->s & X_SET) && (from->s & X_SET)) {
+    point_set_x(to, from->x);
+  }
+  if (!(to->s & Y_SET) && (from->s & Y_SET)) {
+    point_set_y(to, from->y);
+  }
+  if (!(to->s & Z_SET) && (from->s & Z_SET)) {
+    point_set_z(to, from->z);
+  }
+}
+
 
 
 

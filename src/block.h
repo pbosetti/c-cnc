@@ -3,22 +3,26 @@
 //  |  _ \| |/ _ \ / __| |/ /
 //  | |_) | | (_) | (__|   < 
 //  |____/|_|\___/ \___|_|\_\
-//
+//  Block class
+
 #ifndef BLOCK_H
 #define BLOCK_H
 
-// master include
 #include "defines.h"
-#include "machine.h"
-// for toupper() function:
 #include "point.h"
+#include "machine.h"
 
-//   ____  _                   _       
-//  / ___|| |_ _ __ _   _  ___| |_ ___ 
-//  \___ \| __| '__| | | |/ __| __/ __|
-//   ___) | |_| |  | |_| | (__| |_\__ \
-//  |____/ \__|_|   \__,_|\___|\__|___/
-                                    
+//   _____                      
+//  |_   _|   _ _ __   ___  ___ 
+//    | || | | | '_ \ / _ \/ __|
+//    | || |_| | |_) |  __/\__ \
+//    |_| \__, | .__/ \___||___/
+//        |___/|_|              
+
+// Opaque structure representing a G-code block
+typedef struct block block_t;
+
+// Block types
 typedef enum {
   RAPID = 0,
   LINE,
@@ -27,45 +31,41 @@ typedef enum {
   NO_MOTION
 } block_type_t;
 
-typedef struct block block_t;
-
 
 //   _____                 _   _                 
 //  |  ___|   _ _ __   ___| |_(_) ___  _ __  ___ 
 //  | |_ | | | | '_ \ / __| __| |/ _ \| '_ \/ __|
 //  |  _|| |_| | | | | (__| |_| | (_) | | | \__ \
 //  |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
-                                              
-// create a new block, prev is the previous one
-// (it can be NULL for the first block)
-block_t *block_new(char *line, block_t *prev, machine_t *cfg);
 
-// free memory for block
-void block_free(block_t *block);
+// LIFECYCLE ===================================================================
 
-// parse the g-code line and fill the block fields
-int block_parse(block_t *block);
+block_t *block_new(const char *line, block_t *prev, machine_t *cfg);
+void block_free(block_t *b);
+void block_print(block_t *b, FILE *out);
 
-// evaluate lambda function at a given time
-data_t block_lambda(block_t *block, data_t time, data_t *v);
+// ALGORITHMS ==================================================================
 
-// interpolate motion on three axes at a given lambda value
-point_t *block_interpolate(block_t *block, data_t lambda);
+// Parsing the G-code string. Returns an integer for success/failure
+int block_parse(block_t *b);
 
-// print block description to channel out
-void block_print(block_t *block, FILE *out);
+// Evaluate the value of lambda at a certaint time
+// also return speed in the parameter v
+data_t block_lambda(const block_t *b, data_t time, data_t *v);
 
-data_t block_dt(block_t *block);
+// Interpolate lambda over three axes
+point_t *block_interpolate(block_t *b, data_t lambda);
 
-data_t block_dtheta(block_t *block);
 
-point_t *block_center(block_t *block);
+// GETTERS =====================================================================
 
-data_t block_length(block_t *block);
-
-block_t *block_next(block_t *block);
-
+data_t block_length(const block_t *b);
+data_t block_dtheta(const block_t *b);
+data_t block_dt(const block_t *b);
+point_t *block_center(const block_t *b);
+data_t block_r(const block_t *b);
+block_t *block_next(block_t *b);
 
 
 
-#endif // double inclusion guard
+#endif // BLOCK_H
