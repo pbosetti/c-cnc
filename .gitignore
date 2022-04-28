@@ -18,3 +18,8 @@ Dockerfile
 /products*/*
 !/products*/.gitkeep
 *.dSYM
+
+/MATLAB/mqtt_pub.m
+/MATLAB/mqtt_sub.m
+/MATLAB/simple_axis_3.slx
+/MATLAB/simple_axis_data.m
