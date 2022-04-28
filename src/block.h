@@ -62,9 +62,12 @@ point_t *block_interpolate(block_t *b, data_t lambda);
 data_t block_length(const block_t *b);
 data_t block_dtheta(const block_t *b);
 data_t block_dt(const block_t *b);
-point_t *block_center(const block_t *b);
 data_t block_r(const block_t *b);
-
+block_type_t block_type(const block_t *b);
+char *block_line(const block_t *b);
+size_t block_n(const block_t *b);
+point_t *block_center(const block_t *b);
+block_t *block_next(const block_t *b);
 
 
 #endif // BLOCK_H

@@ -5,7 +5,6 @@
 //  |____/|_|\___/ \___|_|\_\
 
 #include "block.h"
-#include <string.h>
 #include <ctype.h>
 
 //   ____            _                 _   _
@@ -62,8 +61,8 @@ block_t *block_new(const char *line, block_t *prev, machine_t *cfg) {
   assert(line && cfg); // prev is NULL if this is the first block
   block_t *b = (block_t *)calloc(1, sizeof(block_t));
   if (!b) {
-    perror("Error creating a block");
-    exit(EXIT_FAILURE);
+    perror("Could not allocate block");
+    return NULL;
   }
 
   if (prev) { // copy the memory from the previous block
@@ -86,8 +85,8 @@ block_t *block_new(const char *line, block_t *prev, machine_t *cfg) {
   // allocate memory for profile struct
   b->prof = (block_profile_t *)calloc(1, sizeof(block_profile_t));
   if (!b->prof) {
-    perror("Error creating a profile structure");
-    exit(EXIT_FAILURE);
+    perror("Could not allocate profile structure");
+    return NULL;
   }
 
   b->machine = cfg;
@@ -95,8 +94,8 @@ block_t *block_new(const char *line, block_t *prev, machine_t *cfg) {
   b->acc = machine_A(b->machine);
   b->line = strdup(line);
   if (! b->line) {
-    perror("Could not allocate memory");
-    exit(EXIT_FAILURE);
+    perror("Could not allocate line");
+    return NULL;
   }
 
   return b;
@@ -142,8 +141,8 @@ int block_parse(block_t *b) {
 
   tofree = line = strdup(b->line);
   if (!line) {
-    perror("Error copying line");
-    exit(EXIT_FAILURE);
+    perror("Could not allocate momory for tokenizing line");
+    return 1;
   }
   // Tokenizing loop
   while ((word = strsep(&line, " ")) != NULL) {
@@ -259,30 +258,20 @@ point_t *block_interpolate(block_t *b, data_t lambda) {
 
 // GETTERS =====================================================================
 
-data_t block_length(const block_t *b) {
-  assert(b);
-  return b->length;
-}
+#define block_getter(typ, par, name) \
+typ block_##name(const block_t *b) { assert(b); return b->par; }
 
-data_t block_dtheta(const block_t *b) {
-  assert(b);
-  return b->dtheta;
-}
+block_getter(data_t, length, length);
+block_getter(data_t, dtheta, dtheta);
+block_getter(data_t, prof->dt, dt);
+block_getter(block_type_t, type, type);
+block_getter(char *, line, line);
+block_getter(size_t, n, n);
+block_getter(data_t, r, r);
+block_getter(point_t *, center, center);
+block_getter(block_t *, next, next);
 
-point_t *block_center(const block_t *b) {
-  assert(b);
-  return b->center;
-}
 
-data_t block_dt(const block_t *b) {
-  assert(b);
-  return b->prof->dt;
-}
-
-data_t block_r(const block_t *b) {
-  assert(b);
-  return b->r;
-}
 
 //   ____  _        _   _         __                  
 //  / ___|| |_ __ _| |_(_) ___   / _|_   _ _ __   ___ 
