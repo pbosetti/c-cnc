@@ -1,4 +1,4 @@
-FROM dockcross/linux-@TARGET_NAME@:latest
+FROM dockcross/linux-@TARGET_NAME@:@TARGET_VERSION@
 LABEL maintainer="Paolo Bosetti <paolo.bosetti@unitn.it>"
 
 ENV WORKDIR /work
@@ -86,4 +86,4 @@ RUN cd ${BUILDDIR} &&\
 
 RUN apt update && \
     apt install -y ruby && \
-    gem install gv_fsm
+    gem install gv_fsm -v 0.2.8
