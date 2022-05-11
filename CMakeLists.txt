@@ -55,11 +55,16 @@ elseif(UNIX AND NOT APPLE)
 elseif(APPLE)
   message(STATUS "Building on Apple OS X")
   set(NATIVE TRUE)
-  include_directories(/usr/local/include)
-  link_directories(/usr/local/lib)
-  # on M1 Macs, brew uses different directories:
-  include_directories(/opt/homebrew/include)
-  link_directories(/opt/homebrew/lib)
+  # On Intel Macs, brew uses /usr/local
+  if(EXISTS /usr/local)
+    include_directories(/usr/local/include)
+    link_directories(/usr/local/lib)
+  endif()
+  # on M1 Macs, brew uses /opt/homebrew:
+  if(EXISTS /opt/homebrew)
+    include_directories(/opt/homebrew/include)
+    link_directories(/opt/homebrew/lib)
+  endif()
 endif()
 
 if(NOT CMAKE_BUILD_TYPE)
