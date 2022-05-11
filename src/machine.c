@@ -16,7 +16,7 @@
 
 typedef struct machine {
   data_t A, tq, error;
-  point_t *zero, *offset;
+  point_t *zero, *offset, *setpoint;
 } machine_t;
 
 
@@ -72,6 +72,8 @@ machine_t *machine_new(const char *ini_path) {
     m->offset = point_new();
     point_set_xyz(m->offset, 0, 0, 0);
   }
+  m->setpoint = point_new();
+  point_modal(m->zero, m->setpoint);
   return m;
 }
 
@@ -79,6 +81,7 @@ void machine_free(machine_t *m) {
   assert(m);
   point_free(m->zero);
   point_free(m->offset);
+  point_free(m->setpoint);
   free(m);
   m = NULL;
 }
@@ -94,4 +97,5 @@ machine_getter(data_t, tq);
 machine_getter(data_t, error);
 machine_getter(point_t *, zero);
 machine_getter(point_t *, offset);
+machine_getter(point_t *, setpoint);
 

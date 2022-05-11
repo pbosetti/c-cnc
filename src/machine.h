@@ -43,6 +43,8 @@ point_t *machine_zero(const machine_t *m);
 
 point_t *machine_offset(const machine_t *m);
 
+point_t *machine_setpoint(const machine_t *m);
+
 data_t machine_error(const machine_t *m);
 
 

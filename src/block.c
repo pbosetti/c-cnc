@@ -233,7 +233,7 @@ data_t block_lambda(const block_t *b, data_t t, data_t *v) {
 // CAREFUL: this function allocates a point
 point_t *block_interpolate(block_t *b, data_t lambda) {
   assert(b);
-  point_t *result = point_new();
+  point_t *result = machine_setpoint(b->machine);
   point_t *p0 = point_zero(b);
 
   if (b->type == LINE) {
