@@ -1,8 +1,8 @@
 #include "../defines.h"
 #include "../machine.h"
 #include "../program.h"
-#include "../block.c"
-#include "../point.c"
+#include "../block.h"
+#include "../point.h"
 
 #define eprintf(...) fprintf(stderr, __VA_ARGS__)
 
