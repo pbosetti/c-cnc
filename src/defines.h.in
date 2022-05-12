@@ -26,4 +26,6 @@ typedef double data_t;
 #define VERSION "@VERSION@"
 #define BUILD_TYPE "@CMAKE_BUILD_TYPE@"
 
+#define eprintf(...) fprintf(stderr, __VA_ARGS__)
+
 #endif

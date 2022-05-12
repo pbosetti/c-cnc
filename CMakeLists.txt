@@ -135,6 +135,7 @@ list(APPEND TARGETS_LIST
 if(NATIVE) # Native build: use shared libraries
   add_library(${PROJECT_NAME}_shared SHARED ${LIB_SOURCES} ${LIB_SOURCES_CPP})
   list(APPEND TARGETS_LIST ${PROJECT_NAME}_shared)
+  target_link_libraries(${PROJECT_NAME}_shared mosquitto)
   target_link_libraries(ini_test ${PROJECT_NAME}_shared)
   target_link_libraries(mqtt_test ${PROJECT_NAME}_shared mosquitto)
   target_link_libraries(mqtt_stress ${PROJECT_NAME}_shared mosquitto)

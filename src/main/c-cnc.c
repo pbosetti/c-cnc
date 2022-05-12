@@ -45,6 +45,7 @@ int main(int argc, char const *argv[]) {
       printf("%lu,%f,%f,%f,%f,%f,%f,%f,%f\n", block_n(b), t, tt,
         lambda, lambda * block_length(b), f,
         point_x(sp), point_y(sp), point_z(sp));
+      machine_sync(machine);
     }
   }
 

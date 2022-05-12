@@ -10,6 +10,7 @@
 
 #include "defines.h"
 #include "point.h"
+#include <mosquitto.h>
 
 //   _____                      
 //  |_   _|   _ _ __   ___  ___ 
@@ -32,6 +33,16 @@ typedef struct machine machine_t;
 
 machine_t *machine_new(const char *ini_path);
 void machine_free(machine_t *m);
+
+// MQTT COMMUNICATIONS =========================================================
+
+typedef void (* machine_on_message)(struct mosquitto *mqt, void *ud, const struct mosquitto_message *msg);
+
+int machine_connect(machine_t *m, machine_on_message callback);
+
+int machine_sync(machine_t *m);
+
+void machine_disconnect(machine_t *m);
 
 // ACCESSORS ===================================================================
 
