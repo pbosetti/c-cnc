@@ -27,7 +27,8 @@ typedef struct block {
   block_type_t type;     // type of block
   size_t n;              // block number
   size_t tool;           // tool number
-  data_t feedrate;       // feedrate
+  data_t feedrate;       // nominal feedrate
+  data_t act_feedrate;   // actual feedrate (possibly reduced along arcs)
   data_t spindle;        // spindle rate
   point_t *target;       // destination point
   point_t *delta;        // distance vector w.r.t. previous point
@@ -163,6 +164,7 @@ int block_parse(block_t *b) {
   case LINE:
     // calculate feed profile
     b->acc = machine_A(b->machine);
+    b->act_feedrate = b->feedrate;
     block_compute(b);
     break;
   case ARC_CW:
@@ -175,12 +177,17 @@ int block_parse(block_t *b) {
     // set corrected feedrate and acceleration
     // centripetal acc = f^2/r, must be <= A
     // INI file gives A in mm/s^2, feedrate is given in mm/min
-    b->feedrate =
+    b->act_feedrate =
         MIN(b->feedrate, sqrt(machine_A(b->machine) * b->r) * 60);
     // tangential acceleration: when composed with centripetal one, total
     // acceleration must be <= A
-    // a^2 <= A^2 - v^4/r^2
-    b->acc = sqrt(pow(machine_A(b->machine), 2) - pow(b->feedrate / 60, 4) / pow(b->r, 2));
+    // a^2 <= A^2 + v^4/r^2
+    b->acc = sqrt(pow(machine_A(b->machine), 2) - pow(b->act_feedrate / 60, 4) / pow(b->r, 2));
+    // deal with complex result
+    if (isnan(b->acc)) {
+      eprintf("Cannot compute arc: insufficient acceleration");
+      rv++;
+    }
     // calculate feed profile
     block_compute(b);
     break;
@@ -297,7 +304,7 @@ static void block_compute(block_t *b) {
   data_t f_m, l;
 
   A = b->acc;
-  f_m = b->feedrate / 60.0;
+  f_m = b->act_feedrate / 60.0;
   l = b->length;
   dt_1 = f_m / A;
   dt_2 = dt_1;
