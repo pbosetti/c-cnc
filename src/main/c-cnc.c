@@ -38,7 +38,11 @@ int main(int argc, char const *argv[]) {
     }
     eprintf("Interpolating the block %s\n", block_line(b));
     // interpolation loop
-    for (t = 0; t <= block_dt(b); t += tq, tt += tq) {
+    // careful: we check t <= block_dt(b) + tq/2.0 for double values are
+    // never exact, and we may have that adding many tq carries over a small
+    // error that accumuates and may result in n*tb being greater than Dt
+    // (if so, we would miss the last step)
+    for (t = 0; t <= block_dt(b) + tq/2.0; t += tq, tt += tq) {
       lambda = block_lambda(b, t, &f);
       sp = block_interpolate(b, lambda);
       if (!sp) continue;
