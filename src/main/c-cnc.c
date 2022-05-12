@@ -10,7 +10,7 @@ int main(int argc, char const *argv[]) {
   point_t *sp = NULL;
   block_t *b = NULL;
   program_t *p = NULL;
-  data_t t, tq, lambda, f;
+  data_t t, tt, tq, lambda, f;
   machine_t *machine = machine_new("settings.ini");
   if (!machine) {
     eprintf("Error creating machine instance\n");
@@ -30,21 +30,21 @@ int main(int argc, char const *argv[]) {
   program_print(p, stderr);
 
   // main loop
-  printf("n,t,lambda,s,f,x,y,z\n");
+  printf("n,t,tt,lambda,s,f,x,y,z\n");
+  tt = 0;
   while ((b = program_next(p))) {
     if (block_type(b) == RAPID || block_type(b) > ARC_CCW) {
       continue;
     }
     eprintf("Interpolating the block %s\n", block_line(b));
     // interpolation loop
-    for (t = 0; t <= block_dt(b); t += tq) {
+    for (t = 0; t <= block_dt(b); t += tq, tt += tq) {
       lambda = block_lambda(b, t, &f);
       sp = block_interpolate(b, lambda);
       if (!sp) continue;
-      printf("%lu,%f,%f,%f,%f,%f,%f,%f\n", block_n(b), t, 
+      printf("%lu,%f,%f,%f,%f,%f,%f,%f,%f\n", block_n(b), t, tt,
         lambda, lambda * block_length(b), f,
         point_x(sp), point_y(sp), point_z(sp));
-      point_free(sp);
     }
   }
 
