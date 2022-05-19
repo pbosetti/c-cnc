@@ -1,0 +1,18 @@
+# EXAMPLE Finite State Machine
+# generate with the command:
+# gv_fsm src/example.dot -o src/_example -k stop
+digraph "Example_FSM" {
+  # List of states
+  init
+  idle
+  run
+  stop
+
+  # List of transitions
+  init -> idle [label=reset]
+  idle -> idle
+  idle -> run
+  run -> run
+  run -> idle [label=reset]
+  idle -> stop
+}

@@ -106,8 +106,8 @@ endif()
 # FILES
 # expect all sources in /src, except mains
 set(SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/src)
-file(GLOB LIB_SOURCES_CPP "${SOURCE_DIR}/*.cpp")
-file(GLOB LIB_SOURCES "${SOURCE_DIR}/*.c")
+file(GLOB LIB_SOURCES_CPP "${SOURCE_DIR}/[^_]*.cpp")
+file(GLOB LIB_SOURCES "${SOURCE_DIR}/[^_]*.c")
 # generate defines.h
 configure_file(
   ${SOURCE_DIR}/defines.h.in
@@ -145,7 +145,7 @@ else() # X-build: use static libraries
   target_link_libraries(ini_test ${PROJECT_NAME}_static)
   target_link_libraries(mqtt_test ${PROJECT_NAME}_static mosquitto_static ssl crypto dl pthread)
   target_link_libraries(mqtt_stress ${PROJECT_NAME}_static mosquitto_static ssl crypto dl pthread)
-  target_link_libraries(c-cnc ${PROJECT_NAME}_static m)
+  target_link_libraries(c-cnc ${PROJECT_NAME}_static mosquitto_static ssl crypto dl pthread m)
 endif()
 
 #   _____           _        _ _ 
