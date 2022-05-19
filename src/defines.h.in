@@ -28,4 +28,6 @@ typedef double data_t;
 
 #define eprintf(...) fprintf(stderr, __VA_ARGS__)
 
+uint64_t wait_next(uint64_t interval);
+
 #endif

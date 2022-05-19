@@ -28,6 +28,8 @@ int main(int argc, char const *argv[]) {
     exit(EXIT_FAILURE);
   }
   program_print(p, stderr);
+  
+  machine_connect(machine, NULL);
 
   // main loop
   printf("n,t,tt,lambda,s,f,x,y,z\n");
@@ -50,6 +52,7 @@ int main(int argc, char const *argv[]) {
         lambda, lambda * block_length(b), f,
         point_x(sp), point_y(sp), point_z(sp));
       machine_sync(machine);
+      wait_next(5e6);
     }
   }
 
