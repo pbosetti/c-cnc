@@ -13,17 +13,18 @@ digraph "C-CNC" {
 
   # List of transitions
   init -> idle
+  init -> stop
   idle -> idle
   idle -> load_block [label="reset"]
   load_block -> no_motion
   no_motion -> load_block
-  load_block -> rapid_motion
+  load_block -> rapid_motion [label="begin_rapid"]
   rapid_motion -> rapid_motion
-  rapid_motion -> load_block [label="reset"]
-  load_block -> interp_motion
+  rapid_motion -> load_block [label="end_rapid"]
+  load_block -> interp_motion [label="begin_interp"]
   interp_motion -> interp_motion
-  interp_motion -> load_block [label="reset"]
-  load_block -> stop
+  interp_motion -> load_block
+  load_block -> idle
   idle -> stop
 
 }
