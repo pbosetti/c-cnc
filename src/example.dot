@@ -1,6 +1,7 @@
 # EXAMPLE Finite State Machine
 # generate with the command:
 # gv_fsm src/example.dot -o src/_example -k stop
+# NOTE: files beginning with an underscore are not compiled with cmake!
 digraph "Example_FSM" {
   # List of states
   init
