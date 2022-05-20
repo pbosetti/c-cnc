@@ -193,17 +193,23 @@ void machine_listen_update(machine_t *m) {
 }
 
 void machine_disconnect(machine_t *m) {
-  while (mosquitto_want_write(m->mqt)) {
-    usleep(10000);
+  if (m->mqt) {
+    while (mosquitto_want_write(m->mqt)) {
+      mosquitto_loop(m->mqt, 0, 1);
+      usleep(10000);
+    }
+    mosquitto_disconnect(m->mqt);
   }
-  mosquitto_disconnect(m->mqt);
 }
 
 
 // ACCESSORS ===================================================================
 
-#define machine_getter(typ, par) \
-typ machine_##par(const machine_t *m) { assert(m); return m->par; }
+#define machine_getter(typ, par)                                               \
+  typ machine_##par(const machine_t *m) {                                      \
+    assert(m);                                                                 \
+    return m->par;                                                             \
+  }
 
 machine_getter(data_t, A);
 machine_getter(data_t, tq);
