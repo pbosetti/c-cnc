@@ -55,7 +55,7 @@ code --install-extension vadimcn.vscode-lldb
 The project must be built with a linux toolchain. On Windows, we are using a WSL2 environment with Ubuntu OS. To enable the compilation we need to install a few packages: on the linux console, type:
 
 ```bash
-sudo apt install build-essential make cmake cmake-curses-gui clang clang-format lldb libgsl-dev ruby figlet
+sudo apt install build-essential make cmake cmake-curses-gui clang clang-format lldb libgsl-dev ruby figlet sshfs
 sudo gem install gv_fsm
 sudo update-alternatives --set c++ /usr/bin/clang++
 sudo update-alternatives --set cc /usr/bin/clang
