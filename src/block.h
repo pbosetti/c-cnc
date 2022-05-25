@@ -68,6 +68,7 @@ char *block_line(const block_t *b);
 size_t block_n(const block_t *b);
 point_t *block_center(const block_t *b);
 block_t *block_next(const block_t *b);
+point_t *block_target(const block_t *b);
 
 
 #endif // BLOCK_H

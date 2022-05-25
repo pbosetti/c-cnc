@@ -3,9 +3,30 @@
 #include "../program.h"
 #include "../block.h"
 #include "../point.h"
+#include "../fsm.h"
 
 #define eprintf(...) fprintf(stderr, __VA_ARGS__)
 
+#if 1
+int main(int argc, char const *argv[]) {
+  ccnc_state_data_t state_data = {
+    .ini_file = "settings.ini",
+    .prog_file = argv[1],
+    .machine = NULL,
+    .prog = NULL
+  };
+  ccnc_state_t cur_state = CCNC_STATE_INIT;
+  do {
+    cur_state = ccnc_run_state(cur_state, &state_data);
+    wait_next(machine_tq(state_data.machine) * 1E9);
+  } while (cur_state != CCNC_STATE_STOP);
+  ccnc_run_state(cur_state, &state_data);
+  return 0;
+}
+
+
+
+#else
 int main(int argc, char const *argv[]) {
   point_t *sp = NULL;
   block_t *b = NULL;
@@ -61,3 +82,4 @@ int main(int argc, char const *argv[]) {
   program_free(p);
   return 0;
 }
+#endif

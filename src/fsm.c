@@ -16,6 +16,8 @@ Functions and types have been generated with prefix "ccnc_"
 #include "fsm.h"
 #include "block.h"
 #include "point.h"
+#include <unistd.h>
+#include <termios.h>
 
 // Install signal handler: 
 // SIGINT requests a transition to state stop
@@ -76,12 +78,38 @@ ccnc_state_t ccnc_do_init(ccnc_state_data_t *data) {
   signal(SIGINT, signal_handler); 
   
   // Steps:
-  // * print software version
-  // * load and parse the G-code file
-  // * print G-code file
-  // * connect with the machine
   // * in case of errors, transition to stop
+
+  // * print software version
+  eprintf("C-CNC ver. %s, %s build\n", VERSION, BUILD_TYPE);
+  data->machine = machine_new(data->ini_file);
+  // * connect with the machine
+  if (!data->machine) {
+    next_state = CCNC_STATE_STOP;
+    goto next_state;
+  }
+  if (machine_connect(data->machine, NULL)) {
+    next_state = CCNC_STATE_STOP;
+    goto next_state;
+  }
+
+  // * load and parse the G-code file
+  data->prog = program_new(data->prog_file);
+  if (!data->prog) {
+    next_state = CCNC_STATE_STOP;
+    goto next_state;
+  }
+  if (program_parse(data->prog, data->machine) == EXIT_FAILURE) {
+    next_state = CCNC_STATE_STOP;
+    goto next_state;
+  }
+
+  // * print G-code file
+  eprintf("Parsed the program %s\n", data->prog_file);
+  program_print(data->prog, stderr);
+
   
+next_state:
   switch (next_state) {
     case CCNC_STATE_IDLE:
     case CCNC_STATE_STOP:
@@ -99,11 +127,39 @@ ccnc_state_t ccnc_do_init(ccnc_state_data_t *data) {
 // SIGINT triggers an emergency transition to stop
 ccnc_state_t ccnc_do_idle(ccnc_state_data_t *data) {
   ccnc_state_t next_state = CCNC_NO_CHANGE;
-  
+  char key;
+  struct termios old_tio, new_tio;
   // Steps:
   // if q is pressed, switch to stop
   // * if spacebar is pressed, switch to load_block
   // * reset total timer
+  eprintf("Press spacebar or 'r' to run, 'q' to quit\n");
+  // save current terminal settings
+  tcgetattr(STDIN_FILENO, &old_tio);
+  // copy setting into new structure
+  new_tio = old_tio;
+  // disable caching 
+  cfmakeraw(&new_tio);
+  // set new settings
+  tcsetattr(STDIN_FILENO, TCSANOW, &new_tio);
+  // wait for keypress
+  key = getchar();
+  // reset initial temrinal setings
+  tcsetattr(STDIN_FILENO, TCSANOW, &old_tio);
+  switch (key)
+  {
+  case 'q':
+  case 'Q':
+    next_state = CCNC_STATE_STOP;
+    break;
+  case ' ':
+  case 'r':
+    next_state = CCNC_STATE_LOAD_BLOCK;
+  default:
+    break;
+  }
+  data->t_blk = 0;
+  data->t_tot = 0;
   
   switch (next_state) {
     case CCNC_NO_CHANGE:
@@ -130,6 +186,16 @@ ccnc_state_t ccnc_do_stop(ccnc_state_data_t *data) {
   // Steps:
   // * disconnect machine
   // * free resources
+  eprintf("Clean up...");
+  signal(SIGINT, SIG_DFL);
+  if (data->machine) {
+    machine_disconnect(data->machine);
+    machine_free(data->machine);
+  }
+  if (data->prog) {
+    program_free(data->prog);
+  }
+  eprintf(" done.\n");
   
   switch (next_state) {
     case CCNC_NO_CHANGE:
@@ -149,7 +215,30 @@ ccnc_state_t ccnc_do_load_block(ccnc_state_data_t *data) {
   
   // Steps:
   // * load next block/
-  
+  block_t *b = program_next(data->prog);
+  if (!b) {
+    next_state = CCNC_STATE_IDLE;
+    goto next_state;
+  }
+  block_print(b, stderr);
+  switch (block_type(b))
+  {
+  case NO_MOTION:
+    next_state = CCNC_STATE_NO_MOTION;
+    break;
+  case RAPID:
+    next_state = CCNC_STATE_RAPID_MOTION;
+    break;
+  case LINE:
+  case ARC_CW:
+  case ARC_CCW:
+    next_state = CCNC_STATE_INTERP_MOTION;
+    break;
+  default:
+    next_state = CCNC_STATE_IDLE;
+    break;
+  }
+next_state:
   switch (next_state) {
     case CCNC_STATE_IDLE:
     case CCNC_STATE_NO_MOTION:
@@ -188,12 +277,22 @@ ccnc_state_t ccnc_do_no_motion(ccnc_state_data_t *data) {
 // SIGINT triggers an emergency transition to stop
 ccnc_state_t ccnc_do_rapid_motion(ccnc_state_data_t *data) {
   ccnc_state_t next_state = CCNC_NO_CHANGE;
-  
+  data_t tq = machine_tq(data->machine);
   // Steps:
   // * call machine_listen_update()
   // * update times (block and total)
   // * if error below threshold, transition to load_block
-  
+  machine_listen_update(data->machine);
+  data->t_blk += tq;
+  data->t_tot += tq;
+  if (machine_error(data->machine) < machine_max_error(data->machine)) {
+    next_state = CCNC_STATE_LOAD_BLOCK;
+  }
+  if (_exit_request) {
+    _exit_request = 0;
+    next_state = CCNC_STATE_LOAD_BLOCK;
+  }
+
   switch (next_state) {
     case CCNC_NO_CHANGE:
     case CCNC_STATE_LOAD_BLOCK:
@@ -215,13 +314,32 @@ ccnc_state_t ccnc_do_rapid_motion(ccnc_state_data_t *data) {
 // SIGINT triggers an emergency transition to stop
 ccnc_state_t ccnc_do_interp_motion(ccnc_state_data_t *data) {
   ccnc_state_t next_state = CCNC_NO_CHANGE;
-  
+  data_t tq = machine_tq(data->machine);
+  data_t lambda, feed;
+  block_t *b = program_current(data->prog);
+  point_t *sp;
+
   // Steps:
   // * calculate lambda
   // * interpolate position
   // * update times
   // * if lambda >= 1 transition to load_block
-  
+  data->t_blk += tq;
+  data->t_tot += tq;
+  if (data->t_blk >= block_dt(b) + tq / 2.0) {
+    next_state = CCNC_STATE_LOAD_BLOCK;
+    goto next_block;
+  }
+  lambda = block_lambda(b, data->t_blk, &feed);
+  sp = block_interpolate(b, lambda);
+  if (!sp) {
+    next_state = CCNC_STATE_LOAD_BLOCK;
+    goto next_block;
+  }
+  printf("%lu,%f,%f,%f,%f,%f,%f,%f,%f\n", block_n(b), data->t_tot, data->t_blk, lambda, lambda * block_length(b), feed, point_x(sp), point_y(sp), point_z(sp));
+  machine_sync(data->machine);
+
+next_block:
   switch (next_state) {
     case CCNC_NO_CHANGE:
     case CCNC_STATE_LOAD_BLOCK:
@@ -256,15 +374,27 @@ ccnc_state_t ccnc_do_interp_motion(ccnc_state_data_t *data) {
 void ccnc_reset(ccnc_state_data_t *data) {
   // Steps:
   // reset both timers
+  data->t_blk = data->t_tot = 0;
+  printf("n,t_tot,t_blk,lambda,s,feed,x,y,z\n");
 }
 
 // This function is called in 1 transition:
 // 1. from load_block to rapid_motion
 void ccnc_begin_rapid(ccnc_state_data_t *data) {
+  point_t *sp = machine_setpoint(data->machine);
+  block_t *b = program_current(data->prog);
+  point_t *target = block_target(b);
   // Steps:
   // * reset block timer
   // * set final position as set point and use machine_sync
   // * call machine_listen_start()
+  machine_listen_start(data->machine);
+  data->t_blk = 0;
+  // copy target coordinates into setpoint
+  point_set_x(sp, point_x(target));
+  point_set_y(sp, point_y(target));
+  point_set_z(sp, point_z(target));
+  machine_sync(data->machine);
 }
 
 // This function is called in 1 transition:
@@ -272,6 +402,7 @@ void ccnc_begin_rapid(ccnc_state_data_t *data) {
 void ccnc_begin_interp(ccnc_state_data_t *data) {
   // Steps:
   // reset block timer
+  data->t_blk = 0;
 }
 
 // This function is called in 1 transition:
@@ -279,6 +410,7 @@ void ccnc_begin_interp(ccnc_state_data_t *data) {
 void ccnc_end_rapid(ccnc_state_data_t *data) {
   // Steps:
   // * call machine_listen_stop()
+  machine_listen_stop(data->machine);
 }
 
 
