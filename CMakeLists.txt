@@ -148,6 +148,18 @@ else() # X-build: use static libraries
   target_link_libraries(c-cnc ${PROJECT_NAME}_static mosquitto_static ssl crypto dl pthread m)
 endif()
 
+if(NOT TARGET_HOSTNAME)
+  SET(TARGET_HOSTNAME debian@beaglebone.local)
+endif()
+add_custom_target(scp 
+  COMMAND pwd
+  COMMAND  "scp" "-r" "products/*" "${TARGET_HOSTNAME}:"
+  DEPENDS c-cnc
+  COMMENT "Copying products to ${TARGET_HOSTNAME}"
+
+  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+)
+
 #   _____           _        _ _ 
 #  |_   _|         | |      | | |
 #    | |  _ __  ___| |_ __ _| | |
