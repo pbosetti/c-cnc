@@ -337,7 +337,7 @@ ccnc_state_t ccnc_do_interp_motion(ccnc_state_data_t *data) {
     goto next_block;
   }
   printf("%lu,%f,%f,%f,%f,%f,%f,%f,%f\n", block_n(b), data->t_tot, data->t_blk, lambda, lambda * block_length(b), feed, point_x(sp), point_y(sp), point_z(sp));
-  machine_sync(data->machine);
+  machine_sync(data->machine, 0);
 
 next_block:
   switch (next_state) {
@@ -394,7 +394,7 @@ void ccnc_begin_rapid(ccnc_state_data_t *data) {
   point_set_x(sp, point_x(target));
   point_set_y(sp, point_y(target));
   point_set_z(sp, point_z(target));
-  machine_sync(data->machine);
+  machine_sync(data->machine, 1);
 }
 
 // This function is called in 1 transition:

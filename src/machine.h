@@ -40,7 +40,7 @@ typedef void (* machine_on_message)(struct mosquitto *mqt, void *ud, const struc
 
 int machine_connect(machine_t *m, machine_on_message callback);
 
-int machine_sync(machine_t *m);
+int machine_sync(machine_t *m, int rapid);
 
 int machine_listen_start(machine_t *m);
 
