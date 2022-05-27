@@ -18,7 +18,7 @@ int main(int argc, char const *argv[]) {
   ccnc_state_t cur_state = CCNC_STATE_INIT;
   do {
     cur_state = ccnc_run_state(cur_state, &state_data);
-    wait_next(machine_tq(state_data.machine) * 1E9);
+    wait_next(machine_tq(state_data.machine) * 1E9 / machine_rt_pacing(state_data.machine));
   } while (cur_state != CCNC_STATE_STOP);
   ccnc_run_state(cur_state, &state_data);
   return 0;

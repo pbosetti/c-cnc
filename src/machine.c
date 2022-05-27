@@ -30,6 +30,7 @@ typedef struct machine {
   struct mosquitto *mqt;
   struct mosquitto_message *msg;
   int connecting;
+  data_t rt_pacing;
 } machine_t;
 
 // callbacks
@@ -63,6 +64,7 @@ machine_t *machine_new(const char *ini_path) {
     rc += ini_get_double(ini, "C-CNC", "A", &m->A);
     rc += ini_get_double(ini, "C-CNC", "max_error", &m->max_error);
     rc += ini_get_double(ini, "C-CNC", "tq", &m->tq);
+    rc += ini_get_double(ini, "C-CNC", "rt_pacing", &m->rt_pacing);
     rc += ini_get_double(ini, "C-CNC", "origin_x", &x);
     rc += ini_get_double(ini, "C-CNC", "origin_y", &y);
     rc += ini_get_double(ini, "C-CNC", "origin_z", &z);
@@ -221,6 +223,7 @@ machine_getter(point_t *, zero);
 machine_getter(point_t *, offset);
 machine_getter(point_t *, setpoint);
 machine_getter(point_t *, position);
+machine_getter(data_t, rt_pacing);
 
 
 
@@ -251,7 +254,7 @@ static void on_message(struct mosquitto *mqt, void *ud, const struct mosquitto_m
   // strrchr returns a pointer to the last occourrence of a given char
   char *subtopic = strrchr(msg->topic, '/') + 1;
 
-  eprintf("<- message: %s\n", (char *)msg->payload);
+  eprintf("<- message: %s:%s\n", msg->topic, (char *)msg->payload);
   mosquitto_message_copy(m->msg, msg);
 
   // if the last topic part is "error", then take it as a single value

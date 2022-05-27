@@ -68,6 +68,8 @@ point_t *machine_position(const machine_t *m);
 
 data_t machine_error(const machine_t *m);
 
+data_t machine_rt_pacing(const machine_t *m);
+
 
 
 
