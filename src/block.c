@@ -16,7 +16,8 @@
 // Trapezoidal velocity profile
 typedef struct {
   data_t a, d;             // acceleration
-  data_t f, l;             // feedrate and length
+  data_t f, l;             // nominal feedrate and length
+  data_t fs, fe;           // initial and final feedrate
   data_t dt_1, dt_m, dt_2; // trapezoid times
   data_t dt;               // total time
 } block_profile_t;
@@ -177,8 +178,15 @@ int block_parse(block_t *b) {
     // set corrected feedrate and acceleration
     // centripetal acc = f^2/r, must be <= A
     // INI file gives A in mm/s^2, feedrate is given in mm/min
+    // We divide by two because, in the critical condition where we have 
+    // the maximum feedrate, in the following equation for calculating the 
+    // acceleration, it goes to 0. In fact, if we accept the centripetal 
+    // acceleration to reach the maximum acceleration, then the tangential 
+    // acceleration would go to 0.
+    // A more elegant solution would be to calculate a minimum time soltion 
+    // for the whole arc, but it is outside the scope.
     b->act_feedrate =
-        MIN(b->feedrate, sqrt(machine_A(b->machine) * b->r) * 60);
+        MIN(b->feedrate, sqrt(machine_A(b->machine)/2.0 * b->r) * 60);
     // tangential acceleration: when composed with centripetal one, total
     // acceleration must be <= A
     // a^2 <= A^2 + v^4/r^2

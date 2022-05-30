@@ -103,6 +103,7 @@ ccnc_state_t ccnc_do_init(ccnc_state_data_t *data) {
     next_state = CCNC_STATE_STOP;
     goto next_state;
   }
+  // if available, calculate here the look-ahead
 
   // * print G-code file
   eprintf("Parsed the program %s\n", data->prog_file);
