@@ -154,10 +154,10 @@ if(NOT TARGET_HOSTNAME)
 endif()
 add_custom_target(scp 
   COMMAND  "scp" "-r" "products/*" "${TARGET_HOSTNAME}:"
-  DEPENDS install
   COMMENT "Copying products to ${TARGET_HOSTNAME}"
   WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
 )
+add_dependencies(scp all)
 
 #   _____           _        _ _ 
 #  |_   _|         | |      | | |
