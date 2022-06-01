@@ -157,7 +157,7 @@ add_custom_target(scp
   COMMENT "Copying products to ${TARGET_HOSTNAME}"
   WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
 )
-add_dependencies(scp all)
+add_dependencies(scp c-cnc)
 
 #   _____           _        _ _ 
 #  |_   _|         | |      | | |
